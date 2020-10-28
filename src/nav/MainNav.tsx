@@ -17,6 +17,7 @@ import ValidarSesion from 'Componentes/ValidarSesion'
 import Negocio from 'Componentes/Negocio'
 import NegocioProductos from 'Componentes/NegocioProductos'
 import Producto from 'Componentes/Producto'
+import Registro from 'Componentes/Registro'
 
 import {Platform} from "react-native";
 
@@ -85,6 +86,7 @@ const MainNavigation = memo(() => {
                     <Screen name='Negocio' component={Negocio} options={optionNavigator}/>
                     <Screen name='NegocioProductos' component={NegocioProductos} options={optionNavigator}/>
                     <Screen name='Producto' component={Producto} options={optionNavigator}/>
+                    <Screen name='Registro' component={Registro} options={optionNavigator}/>
                 </Navigator>
               
             </NavigationContainer>

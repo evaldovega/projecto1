@@ -9,6 +9,7 @@ const Screen = Stack.Screen;
 const ROUTERS = {
     Onboarding: 'Onboarding',
     SignIn: 'SignIn',
+    SignUp: 'SignUp',
     ForgotPassword: 'ForgotPassword',
     Profile: 'Profile',
     Notification: 'Notification',

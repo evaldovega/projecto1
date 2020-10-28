@@ -1,15 +1,18 @@
 import React, {memo, useCallback, useState} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from "react-native";
+import {View, Text, TouchableOpacity, StyleSheet, Alert} from "react-native";
 import SvgAvatar from "svgs/menu/SvgAvatar";
 import {Montserrat} from "utils/fonts";
 import {useNavigation} from '@react-navigation/native';
 // @ts-ignore
 import {navigate} from "utils/navigation";
 import {connect} from 'react-redux'
+import AsyncStorage from '@react-native-community/async-storage'
+import {ROUTERS} from 'utils/navigation'
 
 
-const ROUTERS = [
-    'Inicio'
+const _ROUTERS = [
+    'Inicio',
+    'Registro',
 ]
 
 interface Props {
@@ -26,6 +29,13 @@ const LeftMenu = memo((props: Props) => {
         navigate(key);
         setIndex(index);
     };
+
+    const onLogout = () => {
+        AsyncStorage.setItem('token',null)
+        AsyncStorage.setItem('user', null)
+        props.onClose();
+        navigate(ROUTERS.SignIn)
+    }
     return (
         <View style={styles.container}>
             <SvgAvatar/>
@@ -33,7 +43,7 @@ const LeftMenu = memo((props: Props) => {
             <Text style={styles.txtBalance}></Text>
             <View style={{height: 60}}/>
             {
-                ROUTERS.map((item, key) => {
+                _ROUTERS.map((item, key) => {
                     return (
                         <TouchableOpacity style={styles.btn} onPress={() => onPress(item, key)} key={key}>
                             <Text style={[styles.txt, {color: index !== key ? '#969696' : '#4B66EA'}]}>{item}</Text>
@@ -41,6 +51,9 @@ const LeftMenu = memo((props: Props) => {
                     )
                 })
             }
+            <TouchableOpacity style={styles.btn} onPress={() => onLogout()}>
+                <Text style={[styles.txt, {color: '#4B66EA'}]}>Cerrar sesión</Text>
+            </TouchableOpacity>
         </View>
     )
 });

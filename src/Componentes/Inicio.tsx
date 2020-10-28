@@ -71,7 +71,7 @@ class Inicio extends React.Component {
             return (
                 <View style={{paddingVertical:12}}>
                 <Text style={[styles.txtTime,{fontSize:14,color:'#F1C40F',margin:12}]}>Favoritas</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {/* <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View style={{margin:8,justifyContent:'center'}}>
                         <Avatar rounded size={64} source={{uri:'https://i.pinimg.com/564x/67/d4/46/67d4469a08a973413a20c97905b1ebf1.jpg'}}/>
                         <ListItem.Title>Tienda 1</ListItem.Title>
@@ -104,7 +104,7 @@ class Inicio extends React.Component {
                         <Avatar rounded size={64} source={{uri:'https://i.pinimg.com/564x/67/d4/46/67d4469a08a973413a20c97905b1ebf1.jpg'}}/>
                         <ListItem.Title>Tienda 1</ListItem.Title>
                     </View>
-                </ScrollView>
+                </ScrollView> */}
                 </View>
             )
         }
