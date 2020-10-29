@@ -116,6 +116,8 @@ class Producto extends React.Component{
         let subopcion = options[index].suboptions.findIndex(
           (s) => s == subopcion_id,
         );
+      }
+    })
 
     borrarProducto=()=>{
         global.BD.upsert(this.state.orden_id,(doc)=>{
@@ -213,6 +215,7 @@ class Producto extends React.Component{
         },500)
         
     }
+  }
 
 
     render(){
@@ -246,6 +249,7 @@ class Producto extends React.Component{
         )
     }
 }
+  
 
 const mapearEstado=state=>{
     return {
