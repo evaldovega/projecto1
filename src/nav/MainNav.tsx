@@ -16,6 +16,8 @@ import Negocio from 'Componentes/Negocio'
 import NegocioProductos from 'Componentes/NegocioProductos'
 import Producto from 'Componentes/Producto'
 import Orden from 'Componentes/Orden'
+import Registro from 'Componentes/Registro'
+import AgregarUbicacion from 'Componentes/AgregarUbicacion'
 
 import {Platform} from "react-native";
 
@@ -85,6 +87,8 @@ const MainNavigation = memo(() => {
                     <Screen name='NegocioProductos' component={NegocioProductos} options={optionNavigator}/>
                     <Screen name='Producto' component={Producto} options={optionNavigator}/>
                     <Screen name='Orden' component={Orden} options={optionNavigator}/>
+                    <Screen name='Registro' component={Registro} options={optionNavigator}/>
+                    <Screen name='AgregarUbicacion' component={AgregarUbicacion} options={optionNavigator}/>
                 </Navigator>
               
             </NavigationContainer>

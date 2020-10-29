@@ -3,6 +3,7 @@
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTRootView.h>
+#import <GoogleMaps/GoogleMaps.h>
 
 #if DEBUG
 #import <FlipperKit/FlipperClient.h>
@@ -11,6 +12,7 @@
 #import <FlipperKitNetworkPlugin/FlipperKitNetworkPlugin.h>
 #import <SKIOSNetworkPlugin/SKIOSNetworkAdapter.h>
 #import <FlipperKitReactPlugin/FlipperKitReactPlugin.h>
+
 
 static void InitializeFlipper(UIApplication *application) {
   FlipperClient *client = [FlipperClient sharedClient];
@@ -24,7 +26,7 @@ static void InitializeFlipper(UIApplication *application) {
 #endif
 
 @implementation AppDelegate
-
+NSURL *jsCodeLocation;
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
 #if DEBUG
@@ -35,9 +37,9 @@ static void InitializeFlipper(UIApplication *application) {
   RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
                                                    moduleName:@"Claka"
                                             initialProperties:nil];
-
+  [GMSServices provideAPIKey:@"AIzaSyC807290BA0vy7mFR8bOg7VutUHwLbMA2U"];
   rootView.backgroundColor = [[UIColor alloc] initWithRed:1.0f green:1.0f blue:1.0f alpha:1];
-
+  jsCodeLocation = [NSURL URLWithString:@"http://10.0.82.211:8081/index.bundle?platform=ios&dev=true"];
   self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
   UIViewController *rootViewController = [UIViewController new];
   rootViewController.view = rootView;

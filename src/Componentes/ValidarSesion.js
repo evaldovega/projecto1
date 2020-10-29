@@ -31,19 +31,19 @@ class ValidarSesion extends React.Component{
             <LottieView autoPlay loop={false} autoSize style={{width:150}} source={require('Animaciones/logo2.json')}/>
         </View>)
     }
-}
+  }
 
-const mapearEstado=state=>{
-    return {
-        name:state.Usuario.name
-    }
-}
-const mapearAcciones=dispatch=>{
-    return {
-        SET:(data)=>{
-            dispatch(SET(data))
-        }
-    }
-}
+const mapearEstado = (state) => {
+  return {
+    name: state.Usuario.name,
+  };
+};
+const mapearAcciones = (dispatch) => {
+  return {
+    SET: (data) => {
+      dispatch(SET(data));
+    },
+  };
+};
 
-export default connect(mapearEstado,mapearAcciones)(ValidarSesion);
+export default connect(mapearEstado, mapearAcciones)(ValidarSesion);

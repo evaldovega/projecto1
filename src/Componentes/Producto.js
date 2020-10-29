@@ -1,7 +1,17 @@
-import { COLOR_PRIMARY } from 'Constantes'
-import React from 'react'
-import { Image,View,ScrollView,TextInput, Alert,TouchableWithoutFeedback,KeyboardAvoidingView, Keyboard,Platform} from 'react-native'
-import { ListItem,CheckBox,Input,Button,Text} from 'react-native-elements'
+import {COLOR_PRIMARY} from 'Constantes';
+import React from 'react';
+import {
+  Image,
+  View,
+  ScrollView,
+  TextInput,
+  Alert,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Keyboard,
+  Platform,
+} from 'react-native';
+import {ListItem, CheckBox, Input, Button, Text} from 'react-native-elements';
 import NotificationPopup from 'react-native-push-notification-popup';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import CurrencyFormat from 'react-currency-format';
@@ -97,6 +107,15 @@ class Producto extends React.Component{
             return doc
         })
     }
+  seleccionarOpcion = (n, min, max, opcion_id, subopcion_id) => {
+    this.setState((state) => {
+      let data = state.data;
+      let options = data.options;
+      let index = options.findIndex((o) => o.id == opcion_id);
+      if (index >= 0) {
+        let subopcion = options[index].suboptions.findIndex(
+          (s) => s == subopcion_id,
+        );
 
     borrarProducto=()=>{
         global.BD.upsert(this.state.orden_id,(doc)=>{
