@@ -11,5 +11,7 @@ const SQLiteAdapter = SQLiteAdapterFactory(SQLite)
 export default PouchDB
   .plugin(HttpPouch)
   //.plugin(replication)
+  .plugin(require("pouchdb-upsert"))
+  .plugin(require("pouchdb-find"))
   .plugin(mapreduce)
   .plugin(SQLiteAdapter)

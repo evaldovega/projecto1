@@ -8,8 +8,6 @@ import Walkthroughs from "screens/Walkthroughs";
 import ForgotPass from "screens/ForgotPass";
 import SignIn from "screens/SiginIn";
 
-import Profile from "screens/Profile";
-import Notification from "screens/Notification";
 import LeftMenu from "Componentes/Menu";
 
 import Inicio from "Componentes/Inicio"
@@ -17,6 +15,7 @@ import ValidarSesion from 'Componentes/ValidarSesion'
 import Negocio from 'Componentes/Negocio'
 import NegocioProductos from 'Componentes/NegocioProductos'
 import Producto from 'Componentes/Producto'
+import Orden from 'Componentes/Orden'
 
 import {Platform} from "react-native";
 
@@ -85,6 +84,7 @@ const MainNavigation = memo(() => {
                     <Screen name='Negocio' component={Negocio} options={optionNavigator}/>
                     <Screen name='NegocioProductos' component={NegocioProductos} options={optionNavigator}/>
                     <Screen name='Producto' component={Producto} options={optionNavigator}/>
+                    <Screen name='Orden' component={Orden} options={optionNavigator}/>
                 </Navigator>
               
             </NavigationContainer>

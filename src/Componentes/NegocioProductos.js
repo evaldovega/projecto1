@@ -1,9 +1,9 @@
 import React from 'react'
-import {connect} from 'react-redux'
 import {getStatusBarHeight} from "react-native-iphone-x-helper";
 import {Avatar,Button} from 'react-native-elements'
 import {View,Image,StyleSheet,Text,TouchableOpacity,StatusBar,SafeAreaView,FlatList} from 'react-native'
 import {Montserrat} from "utils/fonts";
+import {connect} from 'react-redux'
 import SvgOption from "svgs/staticsHealth/SvgOptions";
 import { ScrollView } from 'react-native-gesture-handler';
 import Cesta from './Cesta'
@@ -12,20 +12,29 @@ import {COLOR_PRIMARY} from 'Constantes'
 class NegocioProductos extends React.Component{
     
     state={
+        desactivar:false,
         categoria:{}
     }
 
     componentDidMount(){
+        console.log("DATA ",this.props.data.categories)
         let productos=this.props.data.categories.find(c=>c.id==this.props.route.params.categoria.id).products
-       
         this.setState({productos:productos,nombre_categoria:this.props.route.params.categoria.name})
-        
+    }
+
+    ver=(item)=>{
+        if(!this.state.desactivar){
+            this.setState({desactivar:true})
+            this.props.navigation.push('Producto',{producto:item,negocio_id:this.props.data.id})
+            setTimeout(()=>{
+                this.setState({desactivar:false})
+            },2000)
+        }
     }
 
     renderItem=({item})=>(
-        
             <View style={[styles.card,{flex:1,justifyContent:'center',flexDirection:'column'}]}>
-                <TouchableOpacity onPress={()=>this.props.navigation.push('Producto',{producto:item})}>
+                <TouchableOpacity disabled={this.state.desactivar} onPress={()=>this.ver(item)}>
                 <Avatar rounded size={128} source={{uri:item.images}}/>
                 <View style={styles.card_content}>
                     <Text style={{fontSize: 16,fontFamily: Montserrat}}>{item.name}</Text>
@@ -45,7 +54,7 @@ class NegocioProductos extends React.Component{
                     <SvgOption/>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.btnOption}>
-                    
+                    <Cesta negocio={this.props.data.negocio_id} navigation={this.props.navigation}/>
                 </TouchableOpacity>
             </View>
             <SafeAreaView style={{flex:1}}>

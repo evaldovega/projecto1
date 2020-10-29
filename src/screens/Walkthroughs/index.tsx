@@ -9,7 +9,6 @@ import SvgIntro3 from "svgs/walkthroughs/SvgIntro3";
 import {ROUTERS} from "utils/navigation";
 import AsyncStorage from '@react-native-community/async-storage'
 import {connect} from 'react-redux'
-import SplashScreen from 'react-native-splash-screen'
 import {SET} from 'Redux/actions/Usuario'
 
 const {width: viewportWidth} = Dimensions.get('window');
@@ -61,7 +60,6 @@ const Walkthroughs = memo(({SET}) => {
 
     useEffect(()=>{
         console.log("APP cargada")
-        SplashScreen.hide()
     })
     return (
         <View style={styles.container}>

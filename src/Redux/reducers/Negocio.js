@@ -16,7 +16,9 @@ export default Negocio = (state = estado_inicial, action) => {
                 draft.error=''
             break
             case NEGOCIO_CARGADO:
-                draft.data.categories=action.data.categories
+                draft.data=action.data
+                draft.data.negocio_id=action.negocio_id
+                
                 draft.cargando=false
             break
             case NEGOCIO_ERROR_CARGANDO:

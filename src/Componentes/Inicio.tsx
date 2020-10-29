@@ -2,13 +2,16 @@ import React from 'react';
 import {View, StyleSheet, Text, TouchableOpacity, ScrollView, StatusBar,Image,VirtualizedList,Animated, Easing,RefreshControl} from "react-native";
 import {getStatusBarHeight} from "react-native-iphone-x-helper";
 import {Montserrat} from "utils/fonts";
-import {COLOR_PRIMARY} from 'Constantes'
-import {SearchBar,Divider,Rating,ListItem, Avatar} from 'react-native-elements'
+import {COLOR_ACCENT, COLOR_PRIMARY, COLOR_TEXT,COLOR_BG_TAPBAR,COLOR_BG, COLOR_DESATIVADO} from 'Constantes'
+import {SearchBar,Divider,Rating,ListItem, Avatar,Icon} from 'react-native-elements'
 import SvgOption from "svgs/staticsHealth/SvgOptions";
 import SvgSetting from "svgs/staticsHealth/SvgSetting";
+import LinearGradient from 'react-native-linear-gradient';
 import LottieView from 'lottie-react-native';
 import {connect} from 'react-redux'
+import TabBar from 'Componentes/TabBar'
 
+const logo=require('imagenes/logo.png')
 
 class Footer extends React.Component{
     state = {
@@ -16,7 +19,7 @@ class Footer extends React.Component{
     };
     componentDidUpdate(prev){
         if(prev.animar!=this.props.animar && this.props.animar){
-            Animated.timing(this.state.progress, {toValue: 1,duration: 200,easing: Easing.linear}).start();
+            Animated.timing(this.state.progress, {toValue: 1,duration:800,easing: Easing.linear}).start();
         }else{
             this.state.progress.setValue(0)
         }
@@ -24,7 +27,7 @@ class Footer extends React.Component{
     render(){
         return (this.props.cargando ? <Text></Text> : (<View style={{flex:1,justifyContent:'center',alignItems:'center',marginVertical:24}}>
         <LottieView  progress={this.state.progress} autoSize style={{width:150}}
-        source={require('Animaciones/check.json')}/>
+        source={require('Animaciones/no_mas.json')}/>
         <Animated.View style={{opacity:this.state.progress}}>
             <Text style={[styles.title,{color:COLOR_PRIMARY}]}>No hay mas tiendas</Text>
         </Animated.View>
@@ -36,24 +39,41 @@ class Footer extends React.Component{
 
 class Inicio extends React.Component {
     state={
+        desactivar:false,
         animar:false,
         cargando:false,
         negocios:[],
+        tipo:'',
         q:''
     }
+
     cargar=()=>{
         this.setState({cargando:true,q:""})
-        global.ordering.businesses().parameters({'type':1,'category':2,'params':'zones,name,about,logo,schedule,featured_products,reviews,delivery_time,header','location':'10.999897,-74.804335'}).get().then(r=>{
+        global.ordering.businesses().parameters({'params':'zones,name,about,logo,schedule,featured_products,reviews,delivery_time,header,food,alcohol,groceries,laundry','location':'11.0140506,-74.8128827'}).get().then(r=>{
             const negocios=r.response.data.result.map(n=>n.original)
-            negocios.unshift({name:'Tienda 1',id:0})
+            //negocios.unshift({name:'Tienda 1',id:0})
+            console.log(negocios[0])
             this.setState({negocios:negocios,cargando:false})
         }).catch(error=>{
             this.setState({cargando:false})
         })
     }
 
+    setTipo=(t)=>{
+        this.setState({tipo:(this.state.tipo==t?'':t)})
+    }
+
     detalle=(n)=>{
-        this.props.navigation.push('Negocio',{...n})
+        
+        if(!this.state.desactivar){
+            this.props.navigation.push('Negocio',{...n})
+            this.setState({desactivar:true})
+            setTimeout(()=>{
+                this.setState({desactivar:false})
+            },4000)
+        }
+        
+        
     }
 
     componentDidMount(){
@@ -108,15 +128,60 @@ class Inicio extends React.Component {
                 </View>
             )
         }
+
+        if(this.state.tipo!=''){
+            if(this.state.tipo=='comida' && !n.food){
+                return
+            }
+            if(this.state.tipo=='mercado' && !n.groceries){
+                return
+            }
+            if(this.state.tipo=='farmacia' && !n.food){
+                return
+            }
+            if(this.state.tipo=='licores' && !n.alcohol){
+                return
+            }
+            if(this.state.tipo=='farmacia' && !n.farmacy){
+                return
+            }
+        }
+        
         return (
-            <ListItem key={n.id} onPress={()=>this.detalle(n)}  style={{borderRadius:8,elevation:1,margin:8,overflow:'hidden'}}>
-                <Avatar rounded size={64}  source={{uri:n.header}}/>
-                <ListItem.Content>
-                    <ListItem.Title>{n.name}</ListItem.Title>
-                    <ListItem.Subtitle>{n.about}</ListItem.Subtitle>
-                    <Rating imageSize={12} readonly startingValue={n.reviews.total} />
-                </ListItem.Content>
-            </ListItem>
+            <TouchableOpacity onPress={()=>this.detalle(n)} >
+                <View style={{marginTop:76,marginHorizontal:16,borderRadius:16,elevation:3,backgroundColor:'#ffff'}}>
+                    <View style={{borderRadius:24,width:'90%',marginTop:-50,alignSelf:'center',overflow:'hidden',backgroundColor:COLOR_DESATIVADO,elevation:3}}>
+                        {n.header && n.header!='' ? <Image style={{width:'100%',height:undefined,aspectRatio:16/9,alignSelf:'center'}} source={{uri:n.header}}/> : <Image style={{alignSelf:'center'}} source={logo}/>}
+                        <View style={{backgroundColor:COLOR_PRIMARY,borderRadius:18,paddingHorizontal:8,paddingVertical:4,position:'absolute',top:16,left:16,flexDirection:'row',justifyContent:'center',alignItems:'center'}}> 
+                            <Icon name='star' color={COLOR_ACCENT} size={12}/>
+                            <Text style={{color:'#ffff',fontSize:12,fontWeight:'bold'}}>{n.reviews.total}</Text>
+                        </View>
+                    </View>
+                    
+                    <View style={{padding:16}}>
+                            <Text style={{alignSelf:'center',fontSize:24,color:COLOR_TEXT,fontWeight:'bold',textTransform:'uppercase'}}>{n.name}</Text>
+                            <View style={{flexDirection:'row',justifyContent:'space-between',marginTop:8}}>
+                                
+                                <View style={{flexDirection:'row'}}>
+                                    <Icon name='clock' type='material-community' size={24} color={COLOR_PRIMARY} style={{marginRight:4}}/><Text style={{color:COLOR_TEXT,fontSize:18}} > {n.delivery_time}min</Text>
+                                </View>
+
+                                <View style={{flexDirection:'row'}}>
+                                    <View style={{backgroundColor:COLOR_PRIMARY,borderRadius:24,paddingVertical:4,paddingHorizontal:16,marginRight:8,alignItems:'center'}}>
+                                        <Text style={{color:'#ffff',fontSize:10}}>Abierto</Text>
+                                        <Text style={{color:'#ffff',fontSize:10}}>{n.today && n.today.lapses && n.today.lapses.length>0 ? n.today.lapses[0].open.hour+':'+n.today.lapses[0].open.minute : '00:00'}</Text>
+                                    </View>
+                                    <View style={{backgroundColor:COLOR_PRIMARY,borderRadius:24,paddingVertical:4,paddingHorizontal:16,alignItems:'center'}}>
+                                        <Text style={{color:'#ffff',fontSize:10}}>Cerrado</Text>
+                                        <Text style={{color:'#ffff',fontSize:10}}>{n.today && n.today.lapses && n.today.lapses.length>1 ? n.today.lapses[1].open.hour+':'+n.today.lapses[1].open.minute : '00:00'}</Text>
+                                    </View>
+                                </View>
+                                
+                                
+                            </View>
+                    </View>
+                </View>
+           </TouchableOpacity>
         )
     }
         
@@ -129,11 +194,12 @@ class Inicio extends React.Component {
     getItemCount=()=>{
         return this.state.negocios.length
     }
+
     final = ({layoutMeasurement, contentOffset, contentSize}) => {
-        const paddingToBottom = 16;
+        const paddingToBottom = 128;
         return layoutMeasurement.height + contentOffset.y >=
           contentSize.height - paddingToBottom;
-      };
+    };
 
     render(){
             return (
@@ -152,22 +218,54 @@ class Inicio extends React.Component {
                         
                     </TouchableOpacity>
                 </View>
-                
 
-                {this.state.cargando ? <View style={{alignItems:'center',justifyContent:'center'}}>
-                    <LottieView source={require('Animaciones/pin.json')} loop autoSize autoPlay style={{width:200}}/>
-                    <Text style={[styles.title,{color:COLOR_PRIMARY}]}>Espere un momento...</Text>
-                </View> : <>
+                <LinearGradient colors={['#ffff',COLOR_BG]}>
+                    <View style={{flexDirection:'row',justifyContent:'center',marginVertical:24,backgroundColor:'transparent'}}>
+                        
+                        <TouchableOpacity onPress={()=>this.setTipo('mercado')}>
+                            <View style={{backgroundColor:(this.state.tipo=='mercado'? COLOR_ACCENT: COLOR_PRIMARY),width:56,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
+                                <Image source={require('imagenes/iconos/mercado.png')}/>
+                            </View>
+                        </TouchableOpacity>
 
-                
-                <View style={{padding:16}}>
-                    <Text style={styles.txtTime}>Hola {this.props.name} dónde quieres pedir hoy</Text>
-                </View>
-                <SearchBar value={this.state.q} containerStyle={{backgroundColor:'#ffff',borderBottomColor:'transparent',borderTopColor:'transparent'}} inputContainerStyle={{backgroundColor:'#ffff'}} placeholder='Escribelo aquí...' onChangeText={(t)=>this.setState({q:t})} lightTheme={true}/>
+                        <TouchableOpacity onPress={()=>this.setTipo('ropa')}>
+                        <View style={{backgroundColor:(this.state.tipo=='ropa'? COLOR_ACCENT: COLOR_PRIMARY),width:56,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
+                            <Image source={require('imagenes/iconos/ropa.png')}/>
+                        </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={()=>this.setTipo('comida')}>
+                        <View style={{backgroundColor:(this.state.tipo=='comida'? COLOR_ACCENT: COLOR_PRIMARY),width:56,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
+                            <Image source={require('imagenes/iconos/hamburguesa.png')}/>
+                        </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={()=>this.setTipo('licores')}>
+                        <View style={{backgroundColor:(this.state.tipo=='licores'? COLOR_ACCENT: COLOR_PRIMARY),width:56,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
+                            <Image source={require('imagenes/iconos/licores.png')}/>
+                        </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={()=>this.setTipo('farmacia')}>
+                        <View style={{backgroundColor:(this.state.tipo=='farmacia'? COLOR_ACCENT: COLOR_PRIMARY),width:56,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
+                            <Image source={require('imagenes/iconos/farmacia.png')}/>
+                        </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={()=>this.setTipo('otro')}>
+                            <View style={{backgroundColor:(this.state.tipo=='otro'? COLOR_ACCENT: COLOR_PRIMARY),width:56,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
+                                <Image source={require('imagenes/iconos/otro.png')}/>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+                </LinearGradient>
+
+
+                {/*<SearchBar value={this.state.q} containerStyle={{backgroundColor:'#ffff',borderBottomColor:'transparent',borderTopColor:'transparent'}} inputContainerStyle={{backgroundColor:'#ffff'}} placeholder='Escribelo aquí...' onChangeText={(t)=>this.setState({q:t})} lightTheme={true}/>*/}
                 
                 <VirtualizedList
-                    maxToRenderPerBatch={40}
-                    windowSize={4}
+                    maxToRenderPerBatch={10}
+                    windowSize={10}
                     removeClippedSubviews={true}
                     style={{flex: 1,padding:0,margin:0}}
                     data={this.state.negocios}
@@ -184,15 +282,15 @@ class Inicio extends React.Component {
                                 this.setState({animar:true})
                             }
                         }else{
-                            this.setState({animar:false})
+                            if(this.state.animar){
+                                this.setState({animar:false})
+                            }
                         }
                     }}
                     ListFooterComponent={<Footer cargando={this.state.cargando} animar={this.state.animar}/>}
                 />
-                
-                
-                
-                </>}
+
+                <TabBar {...this.props}/>
             </View>
         )
     }
@@ -211,7 +309,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#F7F8F9'
     },
     header: {
-        backgroundColor: '#6979F8',
+        backgroundColor: COLOR_PRIMARY,
         borderBottomLeftRadius: 24,
         borderBottomRightRadius: 24,
         height: 96,
@@ -222,7 +320,8 @@ const styles = StyleSheet.create({
     title: {
         fontFamily: Montserrat,
         fontSize: 17,
-        color: '#fff'
+        color: '#fff',
+        textTransform:'uppercase'
     },
     btnClose: {
         position: 'absolute',

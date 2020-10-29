@@ -11,7 +11,7 @@ if (!global.atob) {
 process.browser = true
 
 import PouchDB from 'pouchdb'
-global.BD=new PouchDB('mydb.db', { adapter: 'react-native-sqlite' })
+global.BD=new PouchDB('mydb.db', { adapter: 'react-native-sqlite',revs_limit: 1, auto_compaction: true })
 
 import {AppRegistry} from 'react-native';
 import {name as appName} from './app.json';
