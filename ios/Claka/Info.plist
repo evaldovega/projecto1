@@ -38,7 +38,9 @@
 		</dict>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>Sender requiere utilizar la ubicación geográfica</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Sender requiere utilizar la ubicación geográfica</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Lato-Black.ttf</string>

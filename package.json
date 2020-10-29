@@ -24,6 +24,7 @@
   "dependencies": {
     "@craftzdog/pouchdb-core-react-native": "^7.0.0",
     "@react-native-community/async-storage": "^1.12.1",
+    "@react-native-community/geolocation": "^2.0.2",
     "@react-native-community/masked-view": "^0.1.10",
     "@react-navigation/bottom-tabs": "^5.9.2",
     "@react-navigation/native": "^5.2.4",
@@ -32,6 +33,7 @@
     "base-64": "^1.0.0",
     "events": "^3.2.0",
     "immer": "^7.0.14",
+    "ios-deploy": "^1.11.3",
     "lottie-react-native": "^3.5.0",
     "ordering-api-sdk": "github:sergioaok/ordering-api-sdk",
     "pouchdb-adapter-http": "^7.2.2",
@@ -45,6 +47,7 @@
     "react-native-gesture-handler": "^1.6.1",
     "react-native-iphone-x-helper": "^1.2.1",
     "react-native-linear-gradient": "^2.5.6",
+    "react-native-maps": "^0.27.1",
     "react-native-push-notification-popup": "^1.6.0",
     "react-native-reanimated": "^1.8.0",
     "react-native-safe-area-context": "^0.7.3",
