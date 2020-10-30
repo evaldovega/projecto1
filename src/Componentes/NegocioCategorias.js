@@ -14,7 +14,7 @@ class NegocioCategorias extends React.Component{
     verProductos=(c)=>{
         if(!this.state.desactivar){
             this.setState({desactivar:true})
-            this.props.navigation.push('NegocioProductos',{categoria:c})
+            this.props.navigation.push('NegocioProductos',{categoria:c.id})
             setTimeout(()=>{
                 this.setState({desactivar:false})
             },4000)
@@ -43,7 +43,6 @@ class NegocioCategorias extends React.Component{
     }
     render(){
         return (<View style={{flex:1}}>
-            
                 {this.categorias()}
         </View>)
     }

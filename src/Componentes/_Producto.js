@@ -146,16 +146,13 @@ class Producto extends React.Component{
                         });
                         return
                     }
-                    options[index].suboptions.push(subopcion_id)
+                    state.data.options[index].suboptions.push(subopcion_id)
                 }
             }else{
-                options.push({id:opcion_id,suboptions:[subopcion_id]})
+                state.data.options.push({id:opcion_id,suboptions:[subopcion_id]})
             }
-            data={...{options:options}}
-            if(this.state.orden_id!=''){
-                this.actualizarOrden()
-            }
-            return {...{...data}}
+            
+            return {...state}
         })
         
     }

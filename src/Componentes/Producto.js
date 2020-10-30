@@ -1,4 +1,4 @@
-import {COLOR_PRIMARY} from 'Constantes';
+import {COLOR_PRIMARY,COLOR_BG} from 'Constantes';
 import React from 'react';
 import {
   Image,
@@ -17,7 +17,8 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import CurrencyFormat from 'react-currency-format';
 import LinearGradient from 'react-native-linear-gradient';
 import {connect} from 'react-redux'
-import {cargarCarrito,setCantidad,borrarProducto,ingresarInstrucciones} from 'Redux/actions/Carrito'
+import {agregarProducto} from 'Redux/actions/Pedido'
+import _ from 'lodash';
 
 const icono=require('imagenes/logo.png')
 const TIMEOUT_UPDATE_LOCAL=200
@@ -29,8 +30,11 @@ class Producto extends React.Component{
         this.state={
             opacidad:0,
             orden_id:'',
+            ingredients:[],
+            extras:[],
             data:{
                 id:'',
+                name:'',
                 comment:'',
                 quantity:'0',
                 price:0,
@@ -42,106 +46,101 @@ class Producto extends React.Component{
 
     componentDidMount(){
         this.setState(state=>{
-            let data=state
-            data.negocio_id=this.props.route.params.negocio_id
-            data.id=this.props.route.params.producto.id
-            data.name=this.props.route.params.producto.name
-            data.price=this.props.route.params.producto.price
-            data.images=this.props.route.params.producto.images
-            data.descripcion=this.props.route.params.producto.descripcion
-            data.ingredients=this.props.route.params.producto.ingredients
-            data.extras=this.props.route.params.producto.extras
-            data.data.id=this.props.route.params.producto.id
-            data.data.price=this.props.route.params.producto.price
-            return {...data}
-        })
-        //Crear u Obtener una orden localmente
-        global.BD.find({selector: {negocio_id:this.state.negocio_id}}).then(result=>{
-            if(result.docs.length>0){
-                const orden=result.docs[0]
-                if(orden.productos){
-                    const producto=orden.productos.find(p=>p.id==this.state.id)
-                    if(producto && producto.cantidad){
-                        this.setState(state=>{
-                            state.data.quantity=producto.cantidad
-                            state.data.comment=producto.comentarios
-                            state.data.ingredients=producto.ingredientes
-                            return {...state}
-                        })
-                    }
-                }
-                
-                this.setState({orden_id:orden._id})
-            }else{
-                global.BD.post({negocio_id:this.state.negocio_id}).then(e=>{
-                    this.setState({orden_id:e._id})
-                })
+          const producto=this.props.data.categories.find(c=>c.id==this.props.route.params.categoria).products.find(p=>p.id==this.props.route.params.id)
+            //state.negocio_id=this.props.route.params.negocio_id
+            state.id=this.props.route.params.id
+            state.name=producto.name
+            state.price=producto.price
+            state.images=producto.images
+            state.descripcion=producto.descripcion
+            state.ingredients=producto.ingredients
+            state.extras=producto.extras
+
+            state.data={
+              id:producto.id,
+              categoria:this.props.route.params.categoria,
+              name:producto.name,
+              price:producto.price,
+              images:producto.images,
+              quantity:0,
+              options:[],
+              ingredients:[]
             }
+           
+            return {...state}
         })
+
+        setTimeout(()=>{
+          let producto=this.props.productos.find(p=>p.id==this.state.data.id)
+          if(producto){
+            console.log("Rellenar producto ",producto)
+            let _producto=_.cloneDeep(producto)
+            this.setState(state=>{
+              state.data={..._producto}
+              return {...state}
+            })
+          }
+        })
+        
     }
 
-    //----------BD local
-
-    actualizarLocal=(props)=>{
-        global.BD.upsert(this.state.orden_id,(doc)=>{
-            let nuevo_doc={
-                id:this.state.id,
-                cantidad:this.state.data.quantity,
-                comentarios:this.state.data.comment,
-                ingredientes:this.state.data.ingredients,
-                opciones:this.state.data.options
-            }
-            console.log("Nuevo doc ",nuevo_doc)
-            if(!doc.productos){
-                console.log("Crear array productos")
-                doc.productos=[nuevo_doc]
-            }else{
-                let producto=doc.productos.findIndex(p=>p.id==this.state.id)
-                if(producto>-1){
-                    console.log("Inc prodcucto")
-                    doc.productos[producto]=nuevo_doc
-                }else{
-                    doc.productos.push(nuevo_doc)
-                }
-            }
-            return doc
-        })
+    componentDidUpdate(prev){
+      
     }
+
+    
+    subOpcionAgregada=(opcion_id,subopcion_id)=>{
+      let opcion=this.state.data.options.find(o=>o.id==opcion_id)
+      if(opcion){
+          let sub=opcion.suboptions.find(e=>e==subopcion_id)
+          if(sub){
+              return true
+          }
+      }
+      return false
+    }
+   
   seleccionarOpcion = (n, min, max, opcion_id, subopcion_id) => {
     this.setState((state) => {
-      let data = state.data;
-      let options = data.options;
-      let index = options.findIndex((o) => o.id == opcion_id);
+      console.log(state.data.options)
+      let index = state.data.options.findIndex(o=> o.id == opcion_id);
       if (index >= 0) {
-        let subopcion = options[index].suboptions.findIndex(
-          (s) => s == subopcion_id,
-        );
+        let subopcion = state.data.options[index].suboptions.findIndex((s) => s== subopcion_id);
+        if(subopcion>=0){
+          state.data.options[index].suboptions.splice(subopcion,1)
+        }else{
+          if(state.data.options[index].suboptions.length==max){
+            this.popup.show({
+                appIconSource:icono,
+                appTitle: 'SenderAPP',
+                timeText: '',
+                title: 'Lo siento',
+                body: 'No puedes agregar mas opciones a '+n+' 😬',
+                slideOutTime: 5000
+            });
+            return
+          }
+          state.data.options[index].suboptions.push(subopcion_id)
+        }
+      }else{
+        state.data.options.push({id:opcion_id,suboptions:[subopcion_id]})
       }
+      return {...state}
+      
     })
+  }
 
-    borrarProducto=()=>{
-        global.BD.upsert(this.state.orden_id,(doc)=>{
-            let index=doc.productos.findIndex(p=>p.id==this.state.id)
-            if(index>=0){
-                console.log("Borrar")
-                doc.productos.splice(index,1)
-            }else{
-                console.log("No borrado ",index)
-            }
-            return doc
-        }).then(()=>{
-
-        })
-    }
-    //------------Fin BD local
+    
 
     //--------------------Ingredientes
     ingredienteAgregado=(id)=>{
         if(this.state.data.ingredients){
             return this.state.data.ingredients.includes(id)
+
         }
         return false
     }
+
     agregarIngrediente=(id)=>{
         this.setState(state=>{
             let existe=state.data.ingredients.findIndex(i=>i==id)
@@ -152,38 +151,46 @@ class Producto extends React.Component{
             }
             return {...state}
         })
-        setTimeout(()=>{this.actualizarLocal()},TIMEOUT_UPDATE_LOCAL)
     }
-    ingredientes=()=>{
+
+    ingresarInstrucciones=(t)=>{
+      this.setState(state=>{
+        state.data.comment=t
+        return {...state}
+      })
+    }
+
+    renderIngredientes=()=>{
         if(this.state.ingredients){
             let _ingredientes=this.state.ingredients.map(i=>{
                 return (<CheckBox checkedIcon='dot-circle-o' uncheckedIcon='circle-o' title={i.name} checked={this.ingredienteAgregado(i.id)} onPress={()=>this.agregarIngrediente(i.id)}/>)
             })
             return (
-                <View>
-                    <Text h5>Ingredientes</Text>
+                <View style={{marginTop:32}}>
+                    <Text h5 style={{marginBottom:16}}>Ingredientes</Text>
                     {_ingredientes}
                 </View>
             )
         }
     }
 
-    extras=()=>{
+    renderExtras=()=>{
         if(this.state.extras){
             return this.state.extras.map(e=>{
                 return (
-                    <>
+                    <View style={{marginTop:32}}>
                         {e.options.map(o=>{
                             return (
                             <View>
-                                <Text h5>{o.name} (Min. {o.min} Max. {o.max})</Text>
+                                <Text h5 style={{marginBottom:16}}>{o.name} (Min. {o.min} Max. {o.max})</Text>
                                 {o.suboptions.map(_o=>(  
-                                   <CheckBox  style={{flex:1}} checkedIcon='dot-circle-o' uncheckedIcon='circle-o' title={_o.name} />
+                                   <CheckBox  style={{flex:1}} 
+                                   checked={this.subOpcionAgregada(o.id,_o.id)}checkedIcon='dot-circle-o' uncheckedIcon='circle-o' title={_o.name} onPress={()=>this.seleccionarOpcion(o.name,o.min,o.max,o.id,_o.id)} />
                                 ))}
                             </View>
                         )}
                         )}
-                    </>
+                    </View>
                 )
             })
         }
@@ -194,8 +201,9 @@ class Producto extends React.Component{
             state.data.quantity=parseInt(state.data.quantity)+1
             return {...state}
         })
-        setTimeout(()=>{this.actualizarLocal()},300)
-        
+        setTimeout(()=>{
+          this.props.agregarProducto(Object.assign({},this.state.data))
+        })
     }
 
     minus=()=>{
@@ -204,38 +212,41 @@ class Producto extends React.Component{
                 state.data.quantity=parseInt(state.data.quantity)-1
             }
             return {...state}
-        })
-
+        }) 
         setTimeout(()=>{
-            if(this.state.data.quantity==0){
-                this.borrarProducto()
-            }else{
-                this.actualizarLocal()
-            }
-        },500)
-        
+          this.props.agregarProducto(Object.assign({},this.state.data))
+        })
     }
-  }
+
+    add=()=>{
+      console.log(this.state.data)
+      this.props.agregarProducto(Object.assign({},this.state.data))
+      this.props.navigation.pop()
+    }
+  
 
 
     render(){
         
         return (
-            <View style={{flex:1,backgroundColor:'#ffff'}}>
+            <KeyboardAvoidingView
+              style={{flex:1,backgroundColor:'#ffff'}}
+              behavior="padding"
+            >
                 <View style={{position:'absolute',height:200,width:'100%'}}>
                     {this.state.images ? <Image style={{width:'100%',height:undefined,aspectRatio:16/9}} source={{uri:this.state.images}}/> : <></>}
                     <View style={{width:'100%',height:200,backgroundColor:'#000',position:'absolute',opacity:this.state.opacidad}}></View>
                 </View>
                 <ScrollView showsVerticalScrollIndicator={false}>
-                    <View style={{flex:1,backgroundColor:'#ffff',borderTopLeftRadius:16,borderTopRightRadius:16,padding:16,marginTop:200,elevation:3}}>
+                    <View style={{flex:1,backgroundColor:'#ffff',borderTopLeftRadius:16,borderTopRightRadius:16,padding:16,marginTop:200,paddingBottom:100,elevation:3}}>
                         <Text h3 style={{color:COLOR_PRIMARY}}>{this.state.name || '...'}</Text>
-                        {this.ingredientes()}
-                        {this.extras()}
-                        <Text>Instrucciones Especiales</Text>
-                        <TextInput multiline={true}  numberOfLines={4} underlineColorAndroid='#ffff' style={{borderColor:'silver',borderWidth:1,borderRadius:16}}/>
+                       {this.renderIngredientes()}
+                       {this.renderExtras()}
+                        <Text h5 style={{marginTop:32,marginBottom:16}}>Instrucciones Especiales</Text>
+                        <TextInput multiline={true} value={this.state.data.comment}  numberOfLines={4} underlineColorAndroid='#ffff' style={{borderColor:'silver',borderWidth:1,borderRadius:16}} onChangeText={(t)=>this.ingresarInstrucciones(t)}/>
                     </View>
                 </ScrollView>
-                <LinearGradient colors={['#fff', '#BFC9CA']} style={{height:100,width:'100%',flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingHorizontal:16}} >
+                <LinearGradient colors={["#ffffff00",COLOR_BG,COLOR_BG,COLOR_BG]} style={{position:'absolute',bottom:0,height:100,width:'100%',flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingHorizontal:16}} >
                     
                         <View style={{flexDirection:'row'}}>
                             <Button icon={<Icon name='minus' color='#ffff' size={24}/>} onPress={this.minus} buttonStyle={{borderRadius:32,backgroundColor:COLOR_PRIMARY}}></Button>
@@ -244,8 +255,14 @@ class Producto extends React.Component{
                         </View>
                         <CurrencyFormat value={9} displayType={'text'} thousandSeparator={true}   prefix={'$'} renderText={value => <Text h5>{value}</Text>} />
 
+                        <Button buttonStyle={{borderRadius:32,backgroundColor:COLOR_PRIMARY}} icon={<Icon name='plus' color='#ffff' size={24}/>} title=' Pedido' onPress={this.add}></Button>
+
             </LinearGradient>
-            </View>
+            <NotificationPopup 
+                shouldChildHandleResponderStart={true}
+                shouldChildHandleResponderMove={true} 
+                ref={ref => this.popup = ref} />
+            </KeyboardAvoidingView>
         )
     }
 }
@@ -254,24 +271,14 @@ class Producto extends React.Component{
 const mapearEstado=state=>{
     return {
         data:state.Negocio.data,
-        productos:state.Carrito.productos,
-        carrito_cargado:state.Carrito.carrito_cargado
+        productos:state.Pedido.productos
     }
 }
 const mapearAcciones=dispatch=>{
     return {
-        cargarCarrito:(negocio)=>{
-            dispatch(cargarCarrito(negocio))
-        },
-        setCantidad:(producto,cantidad)=>{
-            dispatch(setCantidad(producto,cantidad))
-        },
-        borrarProducto:(producto_id)=>{
-            dispatch(borrarProducto(producto_id))
-        },
-        ingresarInstrucciones:(producto,instrucciones)=>{
-            dispatch(ingresarInstrucciones(producto,instrucciones))
-        }
+      agregarProducto:(p)=>{
+        dispatch(agregarProducto(p))
+      }
     }
 }
 export default connect(mapearEstado,mapearAcciones)(Producto)

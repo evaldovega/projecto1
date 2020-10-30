@@ -1,12 +1,11 @@
 import React from 'react'
-import {View,StyleSheet,StatusBar,Text,TouchableOpacity,Image,ScrollView} from 'react-native'
+import {View,StyleSheet,StatusBar,Text,TouchableOpacity,Image,ScrollView,BackHandler,AppState, Alert} from 'react-native'
 import {getStatusBarHeight} from "react-native-iphone-x-helper";
 import {Montserrat} from "utils/fonts";
 import NegocioCategorias from './NegocioCategorias'
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {Cargar} from 'Redux/actions/Negocio'
+import {vaciar} from 'Redux/actions/Pedido'
 import {connect} from 'react-redux'
-import Cesta from './Cesta'
 import { COLOR_BG_TAPBAR, COLOR_PRIMARY } from 'Constantes';
 import {Icon} from 'react-native-elements'
 import TabBarNegocio from 'Componentes/TabBarNegocio'
@@ -24,6 +23,33 @@ class Negocio extends React.Component{
     componentDidMount(){
         this.props.cargar(this.props.route.params.id)
         //console.log(this.props.route.params)
+        BackHandler.addEventListener('hardwareBackPress', this.handleBackButton);
+    }
+    componentWillUnmount() {
+        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton);
+    }
+
+    handleBackButton=()=> {
+        if(this.props.productos.length>0 && this.props.navigation.isFocused()){
+            Alert.alert("Tienes un pedido pendiente","¿Quieres anularlo?",[
+                {
+                    text:'Si',
+                    onPress:()=>{
+                        this.props.vaciar()
+                        this.props.navigation.pop()
+                    },
+                    style:'cancel'
+                },
+                {
+                    text:'No seguir comprando',
+                    onPress:()=>{
+
+                    }
+                }
+            ])
+            return true;
+        }
+        
     }
     
     componentDidUpdate(){
@@ -89,28 +115,35 @@ class Negocio extends React.Component{
                 {this.state.mostrar==1 && <NegocioCategorias navigation={this.props.navigation} />}
                 {this.state.mostrar==2 && <>
                     <View style={{padding:16}}>
-                    <Text style={{marginVertical:8}}>{this.props.data.description}</Text>
+                        <Text style={{marginVertical:8}}>{this.props.data.description}</Text>
                         <View style={{elevation:1,borderRadius:32,padding:16,marginVertical:32}}>
                             <Text style={{backgroundColor:COLOR_BG_TAPBAR,padding:16,fontSize:18,fontWeight:'100',borderRadius:16,marginTop:-32}}>Horarios de atención</Text>
                             {this.renderHorarios()}
                         </View>
-                        <View style={{elevation:1,borderRadius:32,padding:16,marginVertical:32}}>
+                        <View style={{elevation:1,borderRadius:32,padding:16,marginVertical:32,backgroundColor:'#fff'}}>
                             <Text style={{backgroundColor:COLOR_BG_TAPBAR,padding:16,fontSize:18,fontWeight:'100',borderRadius:16,marginTop:-32}}>Localización</Text>
+                           
                             <View style={{height: 400,
                                     width: '100%',
                                     justifyContent: 'flex-end',
                                     alignItems: 'center'}}>
                             <MapView
-                                mapType='none'
-                                type='satellite'
+                                paddingAdjustmentBehavior='always'
+                                liteMode={true}
+                                showsUserLocation={true}
                                 initialRegion={{
-                                    
                                 latitude: -74.8128827,
                                 longitude: 11.0140506,
                                 latitudeDelta: 0.0922,
                                 longitudeDelta: 0.0421,
                                 }}
-                                style={{...StyleSheet.absoluteFillObject}}
+                                region={{
+                                    latitude: -74.8128827,
+                                    longitude: 11.0140506,
+                                    latitudeDelta: 0.0922,
+                                    longitudeDelta: 0.0421,
+                                    }}
+                                style={{zIndex:8,...StyleSheet.absoluteFillObject}}
                             ></MapView>
                             </View>
                             <Text style={{fontSize:16}}>{this.props.data.address_notes}, {this.props.data.address}</Text>
@@ -133,6 +166,7 @@ const mapearEstado=state=>{
         cargando:state.Negocio.cargando,
         data:state.Negocio.data,
         error:state.Negocio.error,
+        productos:state.Pedido.productos
     }
 }
 
@@ -140,6 +174,9 @@ const mapearAcciones=d=>{
     return {
         cargar:(id)=>{
             d(Cargar(id))
+        },
+        vaciar:()=>{
+            d(vaciar())
         }
     }
 }

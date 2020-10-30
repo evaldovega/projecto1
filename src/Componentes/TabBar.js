@@ -1,11 +1,19 @@
 import React from 'react'
-import {View,Text,TouchableOpacity} from 'react-native'
+import {View,Text,TouchableOpacity,Animated} from 'react-native'
 import {Icon} from 'react-native-elements'
 import {COLOR_ACCENT, COLOR_PRIMARY, COLOR_TEXT,COLOR_BG_TAPBAR,COLOR_BG, COLOR_DESATIVADO} from 'Constantes'
-
+/*
+import Svg,{ Circle, Path } from 'react-native-svg';
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+*/
 class TabBar extends React.Component{
+    
     render(){
         return(<View style={{backgroundColor:COLOR_BG_TAPBAR,padding:16,borderTopLeftRadius: 24,borderTopRightRadius: 24,height: 70}}>
+            
+            
+
             <View style={{flexDirection:'row',justifyContent:'center'}}>
             <TouchableOpacity>
                     <Icon name='receipt' type='font-awesome-5' size={32} color={COLOR_DESATIVADO}/>
