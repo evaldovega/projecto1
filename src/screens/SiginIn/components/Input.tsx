@@ -2,10 +2,13 @@ import React, {memo, useCallback, useState} from "react";
 import {StyleSheet, TextInput, TouchableOpacity, View} from "react-native";
 import {Lato} from "utils/fonts";
 import SvgEyes from "svgs/signIn/SvgEyes";
+import { Icon } from "react-native-elements";
 
 interface Props {
     mt?: number;
     pass?: boolean;
+    icon?: boolean;
+    fa?: string;
     placeholder:string
 }
 
@@ -32,6 +35,7 @@ const Input = memo((props: Props) => {
             {props.pass && <TouchableOpacity onPressIn={onPressIn} onPressOut={onPressOut}>
               <SvgEyes/>
             </TouchableOpacity>}
+            {props.icon && <Icon name={props.fa} type='font-awesome'></Icon>}
         </View>
     )
 });
