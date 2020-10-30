@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, StyleSheet, Text, TouchableOpacity, ScrollView, StatusBar,Image,VirtualizedList,Animated, Easing,RefreshControl} from "react-native";
+import {View, StyleSheet, Text, TouchableOpacity, Alert, ScrollView, StatusBar,Image,VirtualizedList,Animated, Easing,RefreshControl, Modal} from "react-native";
 import {getStatusBarHeight} from "react-native-iphone-x-helper";
 import {Montserrat} from "utils/fonts";
 import {COLOR_ACCENT, COLOR_PRIMARY, COLOR_TEXT,COLOR_BG_TAPBAR,COLOR_BG, COLOR_DESATIVADO} from 'Constantes'
@@ -9,6 +9,7 @@ import SvgSetting from "svgs/staticsHealth/SvgSetting";
 import LinearGradient from 'react-native-linear-gradient';
 import LottieView from 'lottie-react-native';
 import {connect} from 'react-redux'
+import AsyncStorage from '@react-native-community/async-storage'
 import TabBar from 'Componentes/TabBar'
 
 const logo=require('imagenes/logo.png')
@@ -39,17 +40,24 @@ class Footer extends React.Component{
 
 class Inicio extends React.Component {
     state={
+        userId: '',
         desactivar:false,
         animar:false,
         cargando:false,
         negocios:[],
         tipo:'',
-        q:''
+        q:'',
+        primeraDireccion: '',
+        lat: '',
+        lng: '',
+        addressListVisible: false,
+        addressResultsList: [],
     }
 
     cargar=()=>{
         this.setState({cargando:true,q:""})
-        global.ordering.businesses().parameters({'params':'zones,name,about,logo,schedule,featured_products,reviews,delivery_time,header,food,alcohol,groceries,laundry','location':'11.0140506,-74.8128827'}).get().then(r=>{
+        console.log("LATLONG", `${this.state.lat},${this.state.lng}`)
+        global.ordering.businesses().parameters({'params':'zones,name,about,logo,schedule,featured_products,reviews,delivery_time,header,food,alcohol,groceries,laundry','location':`${this.state.lat},${this.state.lng}`}).get().then(r=>{
             const negocios=r.response.data.result.map(n=>n.original)
             //negocios.unshift({name:'Tienda 1',id:0})
             console.log(negocios[0])
@@ -76,8 +84,40 @@ class Inicio extends React.Component {
         
     }
 
+    cargarUserAddresses=()=> {
+        AsyncStorage.getItem("user").then((user)=>{
+            userId = JSON.parse(user).id
+            this.setState({userId: userId})
+            global.ordering.users(userId).addresses().get().then(async(r) => {
+                this.setState({addressResultsList: r.response.data.result})
+                
+                if(r.response.data.result.length > 0){
+                    var addressSelected = false
+                    r.response.data.result.forEach((address) => {
+                        global.userAddresses.push(address)
+                        if(address.default){
+                            this.setState(address.location)
+                            this.setState({primeraDireccion: address.address})
+                            addressSelected = true
+                        }
+                    })
+                    
+                    if(!addressSelected){
+                        let address = r.response.data.result[0]
+                        this.setState(address.location)
+                        this.setState({primeraDireccion: address.address})
+                    }
+                    this.cargar()
+                }else{
+                    
+                }
+            });
+        })
+        
+    }
+
     componentDidMount(){
-       this.cargar()
+       this.cargarUserAddresses()
     }
 
 
@@ -130,16 +170,13 @@ class Inicio extends React.Component {
         }
 
         if(this.state.tipo!=''){
-            if(this.state.tipo=='comida' && !n.food){
+            if(this.state.tipo=='comida' && !n.food || this.state.tipo=='comida' && !n.alcohol){
                 return
             }
-            if(this.state.tipo=='mercado' && !n.groceries){
+            if(this.state.tipo=='farmacia' && !n.groceries){
                 return
             }
             if(this.state.tipo=='farmacia' && !n.food){
-                return
-            }
-            if(this.state.tipo=='licores' && !n.alcohol){
                 return
             }
             if(this.state.tipo=='farmacia' && !n.farmacy){
@@ -201,14 +238,81 @@ class Inicio extends React.Component {
           contentSize.height - paddingToBottom;
     };
 
+    openAddressList() {
+        this.setState({addressListVisible: true})
+    }
+
+    removeAddress = (addressId, listItemKey) => {
+        if(this.state.addressResultsList.length > 1){
+            global.ordering.users(this.state.userId).addresses(addressId).delete().then(async(r) => {
+                this.setState(state=>{
+                    console.log(r.response.data)
+                    state.addressResultsList.splice(listItemKey,1)
+
+                    return {...state}
+                })
+            })
+        }else{
+            Alert.alert("Debes tener al menos una dirección registrada", "");
+        }
+    }
+
+    onAddressSelected = (address, location) => {
+        this.setState({primeraDireccion: address, lat: location.lat, lng:location.lng, addressListVisible: false})
+        this.cargar()
+    }
+
     render(){
             return (
             <View style={styles.container}>
+                <Modal
+                    transparent={true}
+                    animationType={'slide'}
+                    visible={this.state.addressListVisible}>
+                    <View style={styles.modalBackground}>
+                        <View style={styles.cardOverlay}>
+                            <Text style={{fontSize:24, fontWeight:'bold'}}>
+                                Mis direcciones
+                            </Text>
+                            <TouchableOpacity style={styles.btnAgregar} onPress={() => {this.setState({addressListVisible: false});this.props.navigation.navigate('AgregarUbicacion')}}>
+                                <Icon name='plus' type='font-awesome' color='#ffff' size={24} style={{marginRight:4}}></Icon>
+                                <Text style={{color:'white'}}>
+                                    Agregar dirección
+                                </Text>
+                            </TouchableOpacity>
+                            {
+                                this.state.addressResultsList.map((address, i) => (
+                                    <ListItem key={i} bottomDivider onPress={() => this.onAddressSelected(address.address, address.location)}>
+                                        {address.tag == "home" ? 
+                                            <Icon name="home" type="font-awesome"></Icon>
+                                        : address.tag == "office" ?
+                                            <Icon name="building" type="font-awesome"></Icon>
+                                        : address.tag == "favorites" ? 
+                                            <Icon name="heart" type="font-awesome"></Icon>
+                                        : address.tag == "other" ?
+                                            <Icon name="ellipsis-h" type="font-awesome"></Icon>
+                                        : <Icon name="ellipsis-h" type="font-awesome"></Icon>
+                                        }
+                                        <ListItem.Content>
+                                            <ListItem.Title>{address.address}</ListItem.Title>
+                                        </ListItem.Content>
+                                        <TouchableOpacity onPress={() => this.removeAddress(address.id, i)}>
+                                            <Icon name="trash" type="font-awesome"></Icon>
+                                        </TouchableOpacity>
+                                    </ListItem>
+                                ))
+                            }
+                        </View>
+                    </View>
+                </Modal>
+
                 <StatusBar translucent={true} backgroundColor={'transparent'} barStyle={'light-content'}/>
                 <View style={styles.header}>
                     <View style={{flexDirection:'row'}}>
-                        <Image style={{width:24,height:undefined}} source={require('imagenes/logo.png')}/>
-                        <Text style={[styles.title,{marginLeft:8,fontWeight:'bold'}]}>SenderAPP</Text>
+                        <TouchableOpacity onPress={() => this.openAddressList()}>
+                            <Icon name='chevron-down' type='ionicon' color='#ffff' size={24} style={{marginRight:4}}></Icon>
+                        </TouchableOpacity>
+                        <Text numberOfLines={1} style={[styles.title,{width:'80%', fontWeight:'400',textAlign:'left'}]}>{this.state.primeraDireccion}</Text>
                     </View>
                     
                     <TouchableOpacity style={styles.btnClose}>
@@ -222,39 +326,27 @@ class Inicio extends React.Component {
                 <LinearGradient colors={['#ffff',COLOR_BG]}>
                     <View style={{flexDirection:'row',justifyContent:'center',marginVertical:24,backgroundColor:'transparent'}}>
                         
-                        <TouchableOpacity onPress={()=>this.setTipo('mercado')}>
-                            <View style={{backgroundColor:(this.state.tipo=='mercado'? COLOR_ACCENT: COLOR_PRIMARY),width:56,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
-                                <Image source={require('imagenes/iconos/mercado.png')}/>
+                        <TouchableOpacity onPress={()=>this.setTipo('comida')}>
+                            <View style={{backgroundColor:(this.state.tipo=='comida'? COLOR_ACCENT: COLOR_PRIMARY),width:80,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
+                                <LottieView autoPlay loop={false} autoSize style={{width:'90%', alignSelf:'center'}} source={require('Animaciones/animation_licor.json')}/>
                             </View>
                         </TouchableOpacity>
 
                         <TouchableOpacity onPress={()=>this.setTipo('ropa')}>
-                        <View style={{backgroundColor:(this.state.tipo=='ropa'? COLOR_ACCENT: COLOR_PRIMARY),width:56,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
-                            <Image source={require('imagenes/iconos/ropa.png')}/>
-                        </View>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity onPress={()=>this.setTipo('comida')}>
-                        <View style={{backgroundColor:(this.state.tipo=='comida'? COLOR_ACCENT: COLOR_PRIMARY),width:56,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
-                            <Image source={require('imagenes/iconos/hamburguesa.png')}/>
-                        </View>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity onPress={()=>this.setTipo('licores')}>
-                        <View style={{backgroundColor:(this.state.tipo=='licores'? COLOR_ACCENT: COLOR_PRIMARY),width:56,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
-                            <Image source={require('imagenes/iconos/licores.png')}/>
-                        </View>
+                            <View style={{backgroundColor:(this.state.tipo=='ropa'? COLOR_ACCENT: COLOR_PRIMARY),width:80,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
+                                <LottieView autoPlay loop={false} autoSize style={{width:'90%', alignSelf:'center'}} source={require('Animaciones/animation_moda.json')}/>
+                            </View>
                         </TouchableOpacity>
 
                         <TouchableOpacity onPress={()=>this.setTipo('farmacia')}>
-                        <View style={{backgroundColor:(this.state.tipo=='farmacia'? COLOR_ACCENT: COLOR_PRIMARY),width:56,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
-                            <Image source={require('imagenes/iconos/farmacia.png')}/>
+                        <View style={{backgroundColor:(this.state.tipo=='farmacia'? COLOR_ACCENT: COLOR_PRIMARY),width:80,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
+                            <LottieView autoPlay loop={false} autoSize style={{width:'90%', alignSelf:'center'}} source={require('Animaciones/animation_pastilla.json')}/>
                         </View>
                         </TouchableOpacity>
 
                         <TouchableOpacity onPress={()=>this.setTipo('otro')}>
-                            <View style={{backgroundColor:(this.state.tipo=='otro'? COLOR_ACCENT: COLOR_PRIMARY),width:56,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
-                                <Image source={require('imagenes/iconos/otro.png')}/>
+                            <View style={{backgroundColor:(this.state.tipo=='otro'? COLOR_ACCENT: COLOR_PRIMARY),width:80,height:56,borderRadius:28,justifyContent:'center',alignItems:'center',marginHorizontal:2}}>
+                            <LottieView autoPlay loop={false} autoSize style={{width:'40%', alignSelf:'center'}} source={require('Animaciones/animation_puntos.json')}/>
                             </View>
                         </TouchableOpacity>
                     </View>
@@ -321,7 +413,7 @@ const styles = StyleSheet.create({
         fontFamily: Montserrat,
         fontSize: 17,
         color: '#fff',
-        textTransform:'uppercase'
+        textTransform:'uppercase',
     },
     btnClose: {
         position: 'absolute',
@@ -354,6 +446,16 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 0,
         left: 40
+    },
+    btnAgregar: {
+        backgroundColor: COLOR_PRIMARY,
+        borderRadius: 24,
+        width: '100%',
+        marginTop: 20,
+        height: 48,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row',
     },
     boxStatus: {
         margin: 16,
@@ -425,5 +527,30 @@ const styles = StyleSheet.create({
         width: 1,
         backgroundColor: '#F7F8F9',
         borderRadius: 16
-    }
+    },
+    modalBackground: {
+        backgroundColor: '#FFFFFF77',
+        justifyContent: 'center',
+        alignContent: 'center',
+        flex: 1,
+    },
+    cardOverlay: {
+        backgroundColor: 'white',
+        padding: 24,
+        borderRadius: 12,
+        height: '80%',
+        position:'absolute',
+        bottom:0,
+        width: '100%',
+        alignSelf: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+
+        elevation: 5,
+    },
 });
