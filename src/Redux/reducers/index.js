@@ -1,10 +1,10 @@
 import {combineReducers} from 'redux';
 import Usuario from './Usuario';
-import Negocio from './Negocio'
-import Carrito from './Carrito'
+import Negocio from './Negocio';
+import Pedido from './Pedido';
 
 export default combineReducers({
   Usuario: Usuario,
-  Negocio:Negocio,
-  Carrito:Carrito
+  Negocio: Negocio,
+  Pedido: Pedido,
 });

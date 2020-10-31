@@ -36,6 +36,7 @@ import GetLocation from 'react-native-get-location';
 import MapView, {Marker} from 'react-native-maps';
 import Geocoder from 'react-native-geocoding';
 import {GooglePlacesAutocomplete} from 'react-native-google-places-autocomplete';
+import AsyncStorage from '@react-native-community/async-storage';
 
 class AgregarUbicacion extends React.Component {
   state = {
@@ -44,8 +45,11 @@ class AgregarUbicacion extends React.Component {
     lat: '37.78825',
     lng: '-122.4324',
     direccion: '',
+    addressTag: '',
+    addressNotes: '',
     searchResults: null,
     isShowingResults: false,
+    ownLocationFounded: false,
   };
 
   watchID: ?number = null;
@@ -57,7 +61,11 @@ class AgregarUbicacion extends React.Component {
       timeout: 15000,
     })
       .then((location) => {
-        this.setState({lat: location.latitude, lng: location.longitude});
+        this.setState({
+          lat: location.latitude,
+          lng: location.longitude,
+          ownLocationFounded: true,
+        });
         this.buscarDireccion();
       })
       .catch((error) => {
@@ -83,8 +91,10 @@ class AgregarUbicacion extends React.Component {
   }
 
   onRegionChangeCompleteMap(region) {
-    this.setState({lat: region.latitude, lng: region.longitude});
-    this.buscarDireccion();
+    if (!this.state.ownLocationFounded) {
+      this.setState({lat: region.latitude, lng: region.longitude});
+      this.buscarDireccion();
+    }
   }
 
   onSearchLocation = async (text) => {
@@ -111,6 +121,58 @@ class AgregarUbicacion extends React.Component {
     }
   };
 
+  onPressSaveAddress() {
+    console.log('onPressedAddress');
+    AsyncStorage.getItem('user').then((user) => {
+      userObj = JSON.parse(user);
+      userId = JSON.parse(user).id;
+
+      const addressData = {
+        name: userObj.name,
+        lastname: userObj.lastname ? userObj.lastname : '',
+        address: this.state.direccion,
+        address_notes: this.state.addressNotes,
+        location: `{\"lat\": ${this.state.lat}, \"lng\": ${this.state.lng}}`,
+        tag: this.state.tag,
+        default: false,
+      };
+
+      AsyncStorage.getItem('token').then((token) => {
+        console.log(JSON.stringify(addressData));
+        fetch(
+          `https://apiv4.ordering.co/v400/en/mydomi/users/${userId}/addresses`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(addressData),
+          },
+        )
+          .then((response) => {
+            if (response.error) {
+              Alert.alert(
+                'Ha ocurrido algo inesperado. Intenta nuevamente',
+                'Error al guardar',
+              );
+            } else {
+              Alert.alert('Dirección guardada con éxito', 'Listo');
+              this.props.navigation.pop();
+            }
+            console.log('SUCCESS', response.data);
+          })
+          .catch((err) => {
+            console.error('ERROR', err);
+          });
+      });
+
+      // global.ordering.users(userId).addresses(null).save(addressData).then(async(r) => {
+      //   console.log(r.response)
+      // })
+    });
+  }
+
   render() {
     return (
       <View style={styles.container}>
@@ -123,14 +185,25 @@ class AgregarUbicacion extends React.Component {
             barStyle={'light-content'}
             style={{zIndex: 9}}
           />
-          <View style={styles.header}>
-            <View style={{flexDirection: 'row'}}>
-              <Text style={[styles.title, {marginLeft: 8, fontWeight: 'bold'}]}>
-                Agregar dirección
-              </Text>
-            </View>
-
-            <TouchableOpacity style={styles.btnClose}></TouchableOpacity>
+          <View style={[styles.header, {position: 'relative'}]}>
+            <View
+              style={{
+                backgroundColor: COLOR_PRIMARY,
+                position: 'absolute',
+                width: '100%',
+                height: 96,
+              }}></View>
+            <Text style={styles.title}>Agregar dirección</Text>
+            <TouchableOpacity
+              style={styles.btnClose}
+              onPress={() => this.props.navigation.pop()}>
+              <Icon
+                name="chevron-back"
+                type="ionicon"
+                color="#ffff"
+                size={24}
+              />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.btnOption}></TouchableOpacity>
           </View>
 
@@ -187,7 +260,11 @@ class AgregarUbicacion extends React.Component {
             )}
           </View>
           <Input mt={20} placeholder={'Apartamento o casa'}></Input>
-          <Input mt={20} placeholder={'Notas adicionales'}></Input>
+          <Input
+            mt={20}
+            value={this.state.addressNotes}
+            onChangeText={(t) => this.setState({addressNotes: t})}
+            placeholder={'Notas adicionales'}></Input>
 
           <View
             style={{
@@ -202,13 +279,15 @@ class AgregarUbicacion extends React.Component {
             <TouchableOpacity
               style={[
                 styles.botonTab,
-                this.state.mostrar == 1 ? {backgroundColor: COLOR_PRIMARY} : {},
+                this.state.tag == 'home'
+                  ? {backgroundColor: COLOR_PRIMARY}
+                  : {},
               ]}
-              onPress={() => this.setState({mostrar: 1})}>
+              onPress={() => this.setState({tag: 'home'})}>
               <Text
                 style={
                   (styles.textTab,
-                  this.state.mostrar == 1 ? {color: '#ffff'} : {})
+                  this.state.tag == 'home' ? {color: '#ffff'} : {})
                 }>
                 Casa
               </Text>
@@ -216,13 +295,15 @@ class AgregarUbicacion extends React.Component {
             <TouchableOpacity
               style={[
                 styles.botonTab,
-                this.state.mostrar == 2 ? {backgroundColor: COLOR_PRIMARY} : {},
+                this.state.tag == 'office'
+                  ? {backgroundColor: COLOR_PRIMARY}
+                  : {},
               ]}
-              onPress={() => this.setState({mostrar: 2})}>
+              onPress={() => this.setState({tag: 'office'})}>
               <Text
                 style={
                   (styles.textTab,
-                  this.state.mostrar == 2 ? {color: '#ffff'} : {})
+                  this.state.tag == 'office' ? {color: '#ffff'} : {})
                 }>
                 Oficina
               </Text>
@@ -230,13 +311,15 @@ class AgregarUbicacion extends React.Component {
             <TouchableOpacity
               style={[
                 styles.botonTab,
-                this.state.mostrar == 3 ? {backgroundColor: COLOR_PRIMARY} : {},
+                this.state.tag == 'favorites'
+                  ? {backgroundColor: COLOR_PRIMARY}
+                  : {},
               ]}
-              onPress={() => this.setState({mostrar: 3})}>
+              onPress={() => this.setState({tag: 'favorites'})}>
               <Text
                 style={[
                   styles.textTab,
-                  this.state.mostrar == 3 ? {color: '#ffff'} : {},
+                  this.state.tag == 'favorites' ? {color: '#ffff'} : {},
                 ]}>
                 Favoritos
               </Text>
@@ -244,20 +327,24 @@ class AgregarUbicacion extends React.Component {
             <TouchableOpacity
               style={[
                 styles.botonTab,
-                this.state.mostrar == 4 ? {backgroundColor: COLOR_PRIMARY} : {},
+                this.state.tag == 'other'
+                  ? {backgroundColor: COLOR_PRIMARY}
+                  : {},
               ]}
-              onPress={() => this.setState({mostrar: 4})}>
+              onPress={() => this.setState({tag: 'other'})}>
               <Text
                 style={[
                   styles.textTab,
-                  this.state.mostrar == 4 ? {color: '#ffff'} : {},
+                  this.state.tag == 'other' ? {color: '#ffff'} : {},
                 ]}>
                 Otro
               </Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.btnSignIn}>
+          <TouchableOpacity
+            style={styles.btnSignIn}
+            onPress={() => this.onPressSaveAddress()}>
             <Text style={{color: 'white'}}>Guardar</Text>
           </TouchableOpacity>
         </ImageBackground>
@@ -281,6 +368,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
     height: 96,
+    overflow: 'hidden',
     paddingTop: getStatusBarHeight(),
     justifyContent: 'center',
     alignItems: 'center',
@@ -297,6 +385,7 @@ const styles = StyleSheet.create({
     fontFamily: Montserrat,
     fontSize: 17,
     color: '#fff',
+    fontWeight: '500',
   },
   btnClose: {
     position: 'absolute',

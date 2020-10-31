@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, StyleSheet, Text, TouchableOpacity, Alert, ScrollView, StatusBar,Image,VirtualizedList,Animated, Easing,RefreshControl, Modal} from "react-native";
+import {View, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, Alert, ScrollView, StatusBar,Image,VirtualizedList,Animated, Easing,RefreshControl, Modal} from "react-native";
 import {getStatusBarHeight} from "react-native-iphone-x-helper";
 import {Montserrat} from "utils/fonts";
 import {COLOR_ACCENT, COLOR_PRIMARY, COLOR_TEXT,COLOR_BG_TAPBAR,COLOR_BG, COLOR_DESATIVADO} from 'Constantes'
@@ -11,6 +11,7 @@ import LottieView from 'lottie-react-native';
 import {connect} from 'react-redux'
 import AsyncStorage from '@react-native-community/async-storage'
 import TabBar from 'Componentes/TabBar'
+
 
 const logo=require('imagenes/logo.png')
 
@@ -59,6 +60,7 @@ class Inicio extends React.Component {
         console.log("LATLONG", `${this.state.lat},${this.state.lng}`)
         global.ordering.businesses().parameters({'params':'zones,name,about,logo,schedule,featured_products,reviews,delivery_time,header,food,alcohol,groceries,laundry','location':`${this.state.lat},${this.state.lng}`}).get().then(r=>{
             const negocios=r.response.data.result.map(n=>n.original)
+            negocios.unshift({id:-1})
             //negocios.unshift({name:'Tienda 1',id:0})
             console.log(negocios[0])
             this.setState({negocios:negocios,cargando:false})
@@ -78,7 +80,7 @@ class Inicio extends React.Component {
             this.setState({desactivar:true})
             setTimeout(()=>{
                 this.setState({desactivar:false})
-            },4000)
+            },2000)
         }
         
         
@@ -126,6 +128,9 @@ class Inicio extends React.Component {
             if(!n.name.includes(this.state.q)){
                 return (<></>)
             }
+        }
+        if(n.id==-1){
+            return (<View style={{height:96}}></View>)
         }
         if(n.id==0){
             return (
@@ -185,7 +190,7 @@ class Inicio extends React.Component {
         }
         
         return (
-            <TouchableOpacity onPress={()=>this.detalle(n)} >
+            <TouchableWithoutFeedback onPress={()=>this.detalle(n)} >
                 <View style={{marginTop:76,marginHorizontal:16,borderRadius:16,elevation:3,backgroundColor:'#ffff'}}>
                     <View style={{borderRadius:24,width:'90%',marginTop:-50,alignSelf:'center',overflow:'hidden',backgroundColor:COLOR_DESATIVADO,elevation:3}}>
                         {n.header && n.header!='' ? <Image style={{width:'100%',height:undefined,aspectRatio:16/9,alignSelf:'center'}} source={{uri:n.header}}/> : <Image style={{alignSelf:'center'}} source={logo}/>}
@@ -218,7 +223,7 @@ class Inicio extends React.Component {
                             </View>
                     </View>
                 </View>
-           </TouchableOpacity>
+           </TouchableWithoutFeedback>
         )
     }
         
@@ -322,8 +327,9 @@ class Inicio extends React.Component {
                         
                     </TouchableOpacity>
                 </View>
+                <View style={{flex:1,position:'relative'}}>
 
-                <LinearGradient colors={['#ffff',COLOR_BG]}>
+                <LinearGradient colors={[COLOR_BG,COLOR_BG,COLOR_BG,"#ffffff00"]} style={{position:'absolute',top:0,left:0,width:'100%',height:100,zIndex:7}}>
                     <View style={{flexDirection:'row',justifyContent:'center',marginVertical:24,backgroundColor:'transparent'}}>
                         
                         <TouchableOpacity onPress={()=>this.setTipo('comida')}>
@@ -354,6 +360,8 @@ class Inicio extends React.Component {
 
 
                 {/*<SearchBar value={this.state.q} containerStyle={{backgroundColor:'#ffff',borderBottomColor:'transparent',borderTopColor:'transparent'}} inputContainerStyle={{backgroundColor:'#ffff'}} placeholder='Escribelo aquí...' onChangeText={(t)=>this.setState({q:t})} lightTheme={true}/>*/}
+
+               
                 
                 <VirtualizedList
                     maxToRenderPerBatch={10}
@@ -381,6 +389,7 @@ class Inicio extends React.Component {
                     }}
                     ListFooterComponent={<Footer cargando={this.state.cargando} animar={this.state.animar}/>}
                 />
+                </View>
 
                 <TabBar {...this.props}/>
             </View>

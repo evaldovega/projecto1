@@ -39,7 +39,7 @@ NSURL *jsCodeLocation;
                                             initialProperties:nil];
   [GMSServices provideAPIKey:@"AIzaSyC807290BA0vy7mFR8bOg7VutUHwLbMA2U"];
   rootView.backgroundColor = [[UIColor alloc] initWithRed:1.0f green:1.0f blue:1.0f alpha:1];
-  jsCodeLocation = [NSURL URLWithString:@"http://10.0.82.211:8081/index.bundle?platform=ios&dev=true"];
+  jsCodeLocation = [NSURL URLWithString:@"http://10.0.82.217:8081/index.bundle?platform=ios&dev=true"];
   self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
   UIViewController *rootViewController = [UIViewController new];
   rootViewController.view = rootView;

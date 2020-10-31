@@ -94,6 +94,8 @@ target 'Claka' do
   pod 'GoogleMaps'
   pod 'Google-Maps-iOS-Utils'
 
+  pod 'ReactNativeGetLocation', :path => '../node_modules/react-native-get-location'
+
   target 'ClakaTests' do
     inherit! :complete
     # Pods for testing

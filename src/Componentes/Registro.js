@@ -10,13 +10,15 @@ import {
   Image,
   VirtualizedList,
   Animated,
-  Easing,
-  RefreshControl,
+  ImageBackground,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import {getStatusBarHeight} from 'react-native-iphone-x-helper';
 import {Montserrat} from 'utils/fonts';
 import Input from 'screens/SiginIn/components/Input';
 import {COLOR_PRIMARY} from 'Constantes';
+import SvgClose from 'svgs/forgotPass/SvgClose';
 import {
   SearchBar,
   Divider,
@@ -29,12 +31,16 @@ import SvgSetting from 'svgs/staticsHealth/SvgSetting';
 import LottieView from 'lottie-react-native';
 import {connect} from 'react-redux';
 import {navigate} from 'utils/navigation';
+import {Icon} from 'react-native-elements';
+
+const {width, heigth} = Dimensions.get('screen');
 
 class Registro extends React.Component {
   state = {
     nombrePila: '',
     correoElectronico: '',
     password: '',
+    userRegistered: false,
   };
 
   onSignUp = () => {
@@ -43,114 +49,175 @@ class Registro extends React.Component {
       email: this.state.correoElectronico,
       password: this.state.password,
     };
+    this.setState({userRegistered: true});
 
-    global.ordering
-      .users()
-      .save(data)
-      .then(async (r) => {
-        console.log(r);
-        if (r.response.data.error) {
-          Alert.alert(
-            'Ha ocurrido un error',
-            r.response.data.result.join('\n'),
-          );
-        } else {
-          const {
-            id,
-            name,
-            lastname,
-            birthdate,
-            email,
-            phone,
-            photo,
-            data_map,
-            session,
-          } = r.response.data.result;
+    // global.ordering
+    //   .users()
+    //   .save(data)
+    //   .then(async (r) => {
+    //     console.log(r);
+    //     if (r.response.data.error) {
+    //       console.log(r.response.data)
+    //       Alert.alert(
+    //         'Ha ocurrido un error',
+    //         r.response.data.result.join('\n'),
+    //       );
+    //     } else {
+    //       const {
+    //         id,
+    //         name,
+    //         lastname,
+    //         birthdate,
+    //         email,
+    //         phone,
+    //         photo,
+    //         data_map,
+    //         session,
+    //       } = r.response.data.result;
 
-          // global.ordering.users().auth(
-          //     {
-          //         email: email,
-          //         password: password
-          //     }
-          // ).then(async (r)=>{
-          //     console.log(r)
-          //     if(r.response.data.error){
-          //         Alert.alert('Ha ocurrido un error',r.response.data.result.join("\n"))
-          //     }else{
-          //         const {id,name,lastname,birthdate,email,phone,photo,data_map,session}=r.response.data.result
+    //       // global.ordering.users().auth(
+    //       //     {
+    //       //         email: email,
+    //       //         password: password
+    //       //     }
+    //       // ).then(async (r)=>{
+    //       //     console.log(r)
+    //       //     if(r.response.data.error){
+    //       //         Alert.alert('Ha ocurrido un error',r.response.data.result.join("\n"))
+    //       //     }else{
+    //       //         const {id,name,lastname,birthdate,email,phone,photo,data_map,session}=r.response.data.result
 
-          //         await AsyncStorage.setItem('token',session.access_token)
-          //         await AsyncStorage.setItem('user',JSON.stringify({id,name,lastname,birthdate,email,phone,photo,data_map}))
-          //         navigate('Inicio');
-          //     }
-          // }).catch(error=>{
-          //     console.log("ERROR")
-          //     console.log(error)
-          // })
-        }
-      })
-      .catch((error) => {
-        console.log('ERROR');
-        console.log(error);
-      });
+    //       //         await AsyncStorage.setItem('token',session.access_token)
+    //       //         await AsyncStorage.setItem('user',JSON.stringify({id,name,lastname,birthdate,email,phone,photo,data_map}))
+    //       //         navigate('Inicio');
+    //       //     }
+    //       // }).catch(error=>{
+    //       //     console.log("ERROR")
+    //       //     console.log(error)
+    //       // })
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     console.log('ERROR');
+    //     console.log(error);
+    //   });
   };
 
   render() {
     return (
       <View style={styles.container}>
-        <StatusBar
-          translucent={true}
-          backgroundColor={'transparent'}
-          barStyle={'light-content'}
-        />
-        <View style={styles.header}>
-          <View style={{flexDirection: 'row'}}>
-            <Image
-              style={{width: 24, height: undefined}}
-              source={require('imagenes/logo.png')}
-            />
-            <Text style={[styles.title, {marginLeft: 8, fontWeight: 'bold'}]}>
-              Registro
-            </Text>
+        <Modal
+          transparent={true}
+          animationType={'fade'}
+          visible={this.state.userRegistered}>
+          <View style={styles.modalBackground}>
+            <View style={styles.cardOverlay}>
+              <LottieView
+                autoPlay
+                loop={false}
+                autoSize
+                style={{width: '100%', top: 0, position: 'absolute', left: 0}}
+                source={require('Animaciones/confetti.json')}
+              />
+              <Text style={[styles.desc, {fontWeight: 'bold'}]}>
+                Usuario registrado exitosamente
+              </Text>
+
+              <TouchableOpacity
+                style={styles.btnGoToLogin}
+                onPress={() => {
+                  this.setState({userRegistered: false});
+                  this.props.navigation.navigate('AgregarUbicacion');
+                }}>
+                <Text style={{color: 'white'}}>Añadir dirección</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        <ImageBackground
+          source={require('imagenes/bgfondo.png')}
+          style={styles.bgimage}>
+          <StatusBar
+            translucent={true}
+            backgroundColor={'transparent'}
+            barStyle={'light-content'}
+          />
+          <View style={[styles.header, {position: 'relative'}]}>
+            <View
+              style={{
+                backgroundColor: COLOR_PRIMARY,
+                position: 'absolute',
+                width: '100%',
+                height: 96,
+              }}></View>
+            <Text style={styles.title}>Registro</Text>
+            <TouchableOpacity
+              style={styles.btnClose}
+              onPress={() => this.props.navigation.pop()}>
+              <Icon
+                name="chevron-back"
+                type="ionicon"
+                color="#ffff"
+                size={24}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.btnOption}></TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.btnClose}></TouchableOpacity>
-          <TouchableOpacity style={styles.btnOption}></TouchableOpacity>
-        </View>
-
-        <View>
-          <LottieView
-            source={require('Animaciones/check.json')}
-            autoSize
-            autoPlay
-            style={{width: 200, alignSelf: 'center'}}
-          />
-          <Text style={{textAlign: 'center', marginTop: 40, fontSize: 20}}>
-            Ingresa tus datos {'\n'} y regístrate en Sender
-          </Text>
-          <Input
-            mt={20}
-            placeholder={'Nombre de pila'}
-            value={this.state.nombrePila}
-            onChangeText={(t) => this.setState({nombrePila: t})}
-          />
-          <Input
-            mt={10}
-            placeholder={'Correo electrónico'}
-            value={this.state.correoElectronico}
-            onChangeText={(c) => this.setState({correoElectronico: c})}
-          />
-          <Input
-            mt={10}
-            placeholder={'Contraseña'}
-            value={this.state.password}
-            onChangeText={(p) => this.setState({password: p})}
-          />
-
-          <TouchableOpacity style={styles.btnSignIn} onPress={this.onSignUp}>
-            <Text style={{color: 'white'}}>Registrarme</Text>
-          </TouchableOpacity>
-        </View>
+          <View>
+            <Image
+              source={require('imagenes/logo-negro.png')}
+              style={{
+                alignSelf: 'center',
+                marginTop: 0,
+                marginBottom: 0,
+                width: 250,
+                resizeMode: 'contain',
+              }}></Image>
+            <LottieView
+              autoPlay
+              loop={false}
+              autoSize
+              style={{width: '100%', top: 0, position: 'absolute', left: 0}}
+              source={require('Animaciones/confetti.json')}
+            />
+            <Text
+              style={{
+                textAlign: 'center',
+                marginTop: 0,
+                fontSize: 20,
+                fontWeight: '600',
+              }}>
+              Crea tu cuenta
+            </Text>
+            <Input
+              mt={20}
+              placeholder={'Nombres'}
+              value={this.state.nombrePila}
+              onChangeText={(t) => this.setState({nombrePila: t})}
+            />
+            <Input
+              mt={10}
+              placeholder={'Correo electrónico'}
+              value={this.state.correoElectronico}
+              onChangeText={(c) => this.setState({correoElectronico: c})}
+            />
+            <Input
+              mt={10}
+              placeholder={'Contraseña'}
+              pass={true}
+              value={this.state.password}
+              onChangeText={(p) => this.setState({password: p})}
+            />
+          </View>
+          <View
+            style={{flex: 1, justifyContent: 'flex-end', marginBottom: 100}}>
+            <TouchableOpacity style={styles.btnSignIn} onPress={this.onSignUp}>
+              <Text style={{color: 'white'}}>Registrarme</Text>
+            </TouchableOpacity>
+          </View>
+        </ImageBackground>
       </View>
     );
   }
@@ -164,10 +231,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F8F9',
   },
   header: {
-    backgroundColor: '#6979F8',
+    backgroundColor: COLOR_PRIMARY,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
     height: 96,
+    overflow: 'hidden',
     paddingTop: getStatusBarHeight(),
     justifyContent: 'center',
     alignItems: 'center',
@@ -176,6 +244,7 @@ const styles = StyleSheet.create({
     fontFamily: Montserrat,
     fontSize: 17,
     color: '#fff',
+    fontWeight: '500',
   },
   btnClose: {
     position: 'absolute',
@@ -188,7 +257,19 @@ const styles = StyleSheet.create({
     right: 16,
   },
   btnSignIn: {
-    backgroundColor: '#6979F8',
+    backgroundColor: COLOR_PRIMARY,
+    borderRadius: 24,
+    width: '80%',
+    marginLeft: '10%',
+    marginTop: 20,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 0,
+  },
+  btnGoToLogin: {
+    backgroundColor: COLOR_PRIMARY,
     borderRadius: 24,
     width: '80%',
     marginLeft: '10%',
@@ -203,6 +284,11 @@ const styles = StyleSheet.create({
     margin: 16,
     borderRadius: 24,
     backgroundColor: '#FFF',
+  },
+  bgimage: {
+    resizeMode: 'cover',
+    justifyContent: 'center',
+    flex: 1,
   },
   btnTime: {
     flex: 1,
@@ -291,5 +377,47 @@ const styles = StyleSheet.create({
     width: 1,
     backgroundColor: '#F7F8F9',
     borderRadius: 16,
+  },
+  modalBackground: {
+    backgroundColor: '#FFFFFFDE',
+    justifyContent: 'center',
+    alignContent: 'center',
+    flex: 1,
+  },
+  cardOverlay: {
+    backgroundColor: 'white',
+    padding: 24,
+    borderRadius: 12,
+    width: width - 40,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+
+    elevation: 5,
+  },
+  desc: {
+    textAlign: 'center',
+    fontSize: 14,
+    marginTop: 15,
+  },
+  forgotImage: {
+    width: 160,
+    height: 125,
+    alignSelf: 'center',
+  },
+  containerModal: {
+    marginHorizontal: 40,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#EAE8EA',
+    height: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
   },
 });

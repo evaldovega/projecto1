@@ -1,5 +1,5 @@
 import React, {memo, useCallback,useState } from 'react';
-import {View, StyleSheet, TouchableOpacity, Text, Alert} from "react-native";
+import {View, StyleSheet, TouchableOpacity, Text, Alert, Image, ImageBackground} from "react-native";
 import {useNavigation} from "@react-navigation/native";
 import Header from "screens/SiginIn/components/Header";
 import Input from "screens/SiginIn/components/Input";
@@ -8,6 +8,8 @@ import SvgFaceId from "svgs/signIn/SvgFaceId";
 import {getBottomSpace} from "react-native-iphone-x-helper";
 import {ROUTERS} from "utils/navigation";
 import AsyncStorage from '@react-native-community/async-storage'
+import { COLOR_PRIMARY } from 'Constantes';
+import LottieView from 'lottie-react-native';
 
 const SignIn = memo(() => {
     const {navigate} = useNavigation();
@@ -46,19 +48,20 @@ const SignIn = memo(() => {
 
     return (
         <View style={styles.container}>
-            <Header/>
-            <Input mt={40} placeholder={'Email'} value={email} onChangeText={t=>setEmail(t)} />
+        <ImageBackground
+          source={require('imagenes/bgfondo.png')}
+          style={styles.bgimage}>
+            <Image source={require('imagenes/logo-negro.png')} style={{alignSelf:'center',marginTop:-20,marginBottom:0,width:250,resizeMode:'contain'}}></Image>
+            <LottieView autoPlay loop={false} autoSize style={{width:'100%',top:0,position:"absolute",left:0}} source={require('Animaciones/confetti.json')}/>
+            <Input mt={10} placeholder={'Email'} value={email} onChangeText={t=>setEmail(t)} />
             <Input mt={16} pass={true} placeholder={'Contraseña'} value= {password} onChangeText={t=>setPassword(t)}/>
             <View style={styles.containerSignIn}>
                 <TouchableOpacity style={styles.btnSignIn} onPress={onPressSignIn}>
                     <Text style={styles.txtSignIn}>ACCEDER</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.btnFaceId} onPress={onPressSignIn}>
-                    <SvgFaceId/>
-                </TouchableOpacity>
             </View>
             <TouchableOpacity style={styles.btnForgot} onPress={onPressForgot}>
-                <Text style={styles.txtForgot}>Olvidaste tú contraseña?</Text>
+                <Text style={styles.txtForgot}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
 
             <View style={styles.containerOr}>
@@ -67,8 +70,8 @@ const SignIn = memo(() => {
                 <View style={styles.line}/>
             </View>
 
-            <TouchableOpacity style={styles.btnSignFb} onPress={onPressSignIn}>
-                <Text style={styles.txtSignInFb}>Registrate con FaceBook</Text>
+            <TouchableOpacity style={styles.btnSignFb} onPress={() => navigate('Registro')}>
+                <Text style={styles.txtSignInFb}>Regístrate ahora</Text>
             </TouchableOpacity>
 
             { /*
@@ -77,9 +80,8 @@ const SignIn = memo(() => {
             </TouchableOpacity>
             */ }
 
-            <TouchableOpacity style={styles.btnSignUp}>
-                <Text style={styles.txtSignUp}>No tienes una cuenta? Registrate ahora</Text>
-            </TouchableOpacity>
+            
+            </ImageBackground>
         </View>
     )
 });
@@ -97,13 +99,18 @@ const styles = StyleSheet.create({
         marginTop: 24
     },
     btnSignIn: {
-        backgroundColor: '#0F4C81',
+        backgroundColor: COLOR_PRIMARY,
         borderRadius: 24,
         flex: 1,
         height: 48,
         justifyContent: 'center',
         alignItems: 'center'
     },
+    bgimage: {
+        resizeMode: 'cover',
+        justifyContent: 'center',
+        flex: 1,
+      },
     txtSignIn: {
         fontFamily: Montserrat,
         fontWeight: '600',
@@ -151,7 +158,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 40,
         height: 48,
         borderRadius: 24,
-        backgroundColor: '#6979F8',
+        backgroundColor: COLOR_PRIMARY,
         marginTop: 16,
         justifyContent: 'center',
         alignItems: 'center'

@@ -48,6 +48,7 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         borderWidth: 1,
         borderColor: '#EAE8EA',
+        backgroundColor: '#EAE8EA',
         height: 48,
         flexDirection: 'row',
         alignItems: 'center',

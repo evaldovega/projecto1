@@ -13,6 +13,7 @@ import {ROUTERS} from 'utils/navigation'
 const _ROUTERS = [
     'Inicio',
     'Registro',
+    'MisDirecciones',
 ]
 
 interface Props {

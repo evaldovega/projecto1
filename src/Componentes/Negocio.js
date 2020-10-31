@@ -7,14 +7,16 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  BackHandler,
+  AppState,
+  Alert,
 } from 'react-native';
 import {getStatusBarHeight} from 'react-native-iphone-x-helper';
 import {Montserrat} from 'utils/fonts';
 import NegocioCategorias from './NegocioCategorias';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {Cargar} from 'Redux/actions/Negocio';
+import {vaciar} from 'Redux/actions/Pedido';
 import {connect} from 'react-redux';
-import Cesta from './Cesta';
 import {COLOR_BG_TAPBAR, COLOR_PRIMARY} from 'Constantes';
 import {Icon} from 'react-native-elements';
 import TabBarNegocio from 'Componentes/TabBarNegocio';
@@ -39,7 +41,31 @@ class Negocio extends React.Component {
   componentDidMount() {
     this.props.cargar(this.props.route.params.id);
     //console.log(this.props.route.params)
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackButton);
   }
+  componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton);
+  }
+
+  handleBackButton = () => {
+    if (this.props.productos.length > 0 && this.props.navigation.isFocused()) {
+      Alert.alert('Tienes un pedido pendiente', '¿Quieres anularlo?', [
+        {
+          text: 'Si',
+          onPress: () => {
+            this.props.vaciar();
+            this.props.navigation.pop();
+          },
+          style: 'cancel',
+        },
+        {
+          text: 'No seguir comprando',
+          onPress: () => {},
+        },
+      ]);
+      return true;
+    }
+  };
 
   componentDidUpdate() {
     try {
@@ -69,7 +95,7 @@ class Negocio extends React.Component {
             const horario = keys.map((k, _i) => {
               return (
                 <Text style={{fontSize: 16}}>
-                  {l[k].hour}:{l[k].minute} {_i == 0 ? '-' : ''}
+                  {l[k].hour}:{l[k].minute} {_i == 0 ? '-' : ''}
                 </Text>
               );
             });
@@ -204,6 +230,7 @@ class Negocio extends React.Component {
                       borderRadius: 32,
                       padding: 16,
                       marginVertical: 32,
+                      backgroundColor: '#fff',
                     }}>
                     <Text
                       style={{
@@ -216,6 +243,7 @@ class Negocio extends React.Component {
                       }}>
                       Localización
                     </Text>
+
                     <View
                       style={{
                         height: 400,
@@ -224,15 +252,25 @@ class Negocio extends React.Component {
                         alignItems: 'center',
                       }}>
                       <MapView
-                        mapType="standard"
-                        type="satellite"
+                        paddingAdjustmentBehavior="always"
+                        liteMode={true}
+                        showsUserLocation={true}
                         initialRegion={{
-                          latitude: 37.78825,
-                          longitude: -122.4324,
+                          latitude: -74.8128827,
+                          longitude: 11.0140506,
                           latitudeDelta: 0.0922,
                           longitudeDelta: 0.0421,
                         }}
-                        style={{...StyleSheet.absoluteFillObject}}></MapView>
+                        region={{
+                          latitude: -74.8128827,
+                          longitude: 11.0140506,
+                          latitudeDelta: 0.0922,
+                          longitudeDelta: 0.0421,
+                        }}
+                        style={{
+                          zIndex: 8,
+                          ...StyleSheet.absoluteFillObject,
+                        }}></MapView>
                     </View>
                     <Text style={{fontSize: 16}}>
                       {this.props.data.address_notes}, {this.props.data.address}
@@ -244,7 +282,10 @@ class Negocio extends React.Component {
           </ScrollView>
         </View>
 
-        <TabBarNegocio {...this.props} />
+        <TabBarNegocio
+          {...this.props}
+          style={{position: 'absolute', bottom: 0}}
+        />
       </View>
     );
   }
@@ -255,6 +296,7 @@ const mapearEstado = (state) => {
     cargando: state.Negocio.cargando,
     data: state.Negocio.data,
     error: state.Negocio.error,
+    productos: state.Pedido.productos,
   };
 };
 
@@ -262,6 +304,9 @@ const mapearAcciones = (d) => {
   return {
     cargar: (id) => {
       d(Cargar(id));
+    },
+    vaciar: () => {
+      d(vaciar());
     },
   };
 };

@@ -30,26 +30,25 @@ import SvgOption from 'svgs/staticsHealth/SvgOptions';
 import SvgSetting from 'svgs/staticsHealth/SvgSetting';
 import LottieView from 'lottie-react-native';
 import {connect} from 'react-redux';
-import {navigate, ROUTERS} from 'utils/navigation';
+import {navigate} from 'utils/navigation';
 import {Icon} from 'react-native-elements';
 
 const {width, heigth} = Dimensions.get('screen');
 
-class ForgotPass extends React.Component {
-  
+class MisDirecciones extends React.Component {
   state = {
+    nombrePila: '',
     correoElectronico: '',
-    resetSend: false
+    password: '',
+    userRegistered: true,
   };
 
-  onPressRecordar = () => {
-    global.ordering.users().forgotPassword({email: this.state.correoElectronico}).then(async (r)=>{
-        if(r.response.data.error){
-            Alert.alert('Ha ocurrido un error',r.response.data.result.join("\n"))
-        }else{
-            this.setState({resetSend: true})
-        }
-    })
+  onSignUp = () => {
+    const data = {
+      name: this.state.nombrePila,
+      email: this.state.correoElectronico,
+      password: this.state.password,
+    };
   };
 
   render() {
@@ -58,16 +57,27 @@ class ForgotPass extends React.Component {
         <Modal
           transparent={true}
           animationType={'fade'}
-          visible={this.state.resetSend}>
+          visible={this.state.userRegistered}>
           <View style={styles.modalBackground}>
             <View style={styles.cardOverlay}>
-            <LottieView autoPlay loop={false} autoSize style={{width:'100%', alignSelf:'center'}} source={require('Animaciones/email_sent.json')}/>
-              <Text style={[styles.desc, {fontWeight:'400', fontSize:18}]}>
-                Se ha enviado un correo electrónico con las instrucciones para reestablecer tu contraseña
+              <LottieView
+                autoPlay
+                loop={false}
+                autoSize
+                style={{width: '100%', top: 0, position: 'absolute', left: 0}}
+                source={require('Animaciones/confetti.json')}
+              />
+              <Text style={[styles.desc, {fontWeight: 'bold'}]}>
+                Usuario registrado exitosamente
               </Text>
 
-              <TouchableOpacity style={styles.btnGoToLogin} onPress={() => {this.setState({resetSend:false}); this.props.navigation.navigate(ROUTERS.SignIn)}}>
-                <Text style={{color: 'white'}}>Listo</Text>
+              <TouchableOpacity
+                style={styles.btnGoToLogin}
+                onPress={() => {
+                  this.setState({userRegistered: false});
+                  this.props.navigation.navigate('AgregarUbicacion');
+                }}>
+                <Text style={{color: 'white'}}>Añadir dirección</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -76,46 +86,92 @@ class ForgotPass extends React.Component {
         <ImageBackground
           source={require('imagenes/bgfondo.png')}
           style={styles.bgimage}>
-        <StatusBar
-          translucent={true}
-          backgroundColor={'transparent'}
-          barStyle={'light-content'}
-        />
-        <View style={[styles.header,{position:'relative'}]}>
-            <View style={{backgroundColor:COLOR_PRIMARY,position:'absolute',width:'100%',height:96}}></View>
-            <Text style={styles.title}>Recordar</Text>
-            <TouchableOpacity style={styles.btnClose} onPress={()=>this.props.navigation.pop()}>
-                <Icon name='chevron-back' type='ionicon' color='#ffff' size={24}/>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.btnOption}>
-                
-            </TouchableOpacity>
-        </View>
-
-        <View>
-          <Image source={require('imagenes/logo-negro.png')} style={{alignSelf:'center',marginTop:0,marginBottom:0,width:250,resizeMode:'contain'}}></Image>
-          <Text style={{textAlign: 'center', marginTop: 0, alignSelf:'center', fontSize: 16, fontWeight:'400',width:'80%'}}>
-            Ingresa tu correo electrónico y recibe las instrucciones en tu bandeja de entrada
-          </Text>
-          <Input
-            mt={40}
-            placeholder={'Correo electrónico'}
-            value={this.state.correoElectronico}
-            onChangeText={(c) => this.setState({correoElectronico: c})}
+          <StatusBar
+            translucent={true}
+            backgroundColor={'transparent'}
+            barStyle={'light-content'}
           />
-        </View>
-        <View style={{flex:1, justifyContent:'flex-end',marginBottom:100}}>
-          <TouchableOpacity style={styles.btnSignIn} onPress={() => this.onPressRecordar()}>
-            <Text style={{color: 'white'}}>Recordar</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={[styles.header, {position: 'relative'}]}>
+            <View
+              style={{
+                backgroundColor: COLOR_PRIMARY,
+                position: 'absolute',
+                width: '100%',
+                height: 96,
+              }}></View>
+            <Text style={styles.title}>Registro</Text>
+            <TouchableOpacity
+              style={styles.btnClose}
+              onPress={() => this.props.navigation.pop()}>
+              <Icon
+                name="chevron-back"
+                type="ionicon"
+                color="#ffff"
+                size={24}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.btnOption}></TouchableOpacity>
+          </View>
+
+          <View>
+            <Image
+              source={require('imagenes/logo-negro.png')}
+              style={{
+                alignSelf: 'center',
+                marginTop: 0,
+                marginBottom: 0,
+                width: 250,
+                resizeMode: 'contain',
+              }}></Image>
+            <LottieView
+              autoPlay
+              loop={false}
+              autoSize
+              style={{width: '100%', top: 0, position: 'absolute', left: 0}}
+              source={require('Animaciones/confetti.json')}
+            />
+            <Text
+              style={{
+                textAlign: 'center',
+                marginTop: 0,
+                fontSize: 20,
+                fontWeight: '600',
+              }}>
+              Crea tu cuenta
+            </Text>
+            <Input
+              mt={20}
+              placeholder={'Nombres'}
+              value={this.state.nombrePila}
+              onChangeText={(t) => this.setState({nombrePila: t})}
+            />
+            <Input
+              mt={10}
+              placeholder={'Correo electrónico'}
+              value={this.state.correoElectronico}
+              onChangeText={(c) => this.setState({correoElectronico: c})}
+            />
+            <Input
+              mt={10}
+              placeholder={'Contraseña'}
+              pass={true}
+              value={this.state.password}
+              onChangeText={(p) => this.setState({password: p})}
+            />
+          </View>
+          <View
+            style={{flex: 1, justifyContent: 'flex-end', marginBottom: 100}}>
+            <TouchableOpacity style={styles.btnSignIn} onPress={this.onSignUp}>
+              <Text style={{color: 'white'}}>Registrarme</Text>
+            </TouchableOpacity>
+          </View>
         </ImageBackground>
       </View>
     );
   }
 }
 
-export default connect()(ForgotPass);
+export default connect()(MisDirecciones);
 
 const styles = StyleSheet.create({
   container: {
@@ -127,16 +183,15 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
     height: 96,
-    overflow:'hidden',
+    overflow: 'hidden',
     paddingTop: getStatusBarHeight(),
     justifyContent: 'center',
-    alignItems: 'center'
-},
+    alignItems: 'center',
+  },
   title: {
     fontFamily: Montserrat,
     fontSize: 17,
     color: '#fff',
-    fontWeight: '500'
   },
   btnClose: {
     position: 'absolute',
@@ -158,7 +213,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    bottom: 0
+    bottom: 0,
   },
   btnGoToLogin: {
     backgroundColor: COLOR_PRIMARY,
