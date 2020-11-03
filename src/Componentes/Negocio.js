@@ -20,7 +20,7 @@ import {connect} from 'react-redux';
 import {COLOR_BG_TAPBAR, COLOR_PRIMARY} from 'Constantes';
 import {Icon} from 'react-native-elements';
 import TabBarNegocio from 'Componentes/TabBarNegocio';
-import MapView, {PROVIDER_GOOGLE} from 'react-native-maps';
+import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 
 const dias = [
   'Domingo',
@@ -42,6 +42,7 @@ class Negocio extends React.Component {
     this.props.cargar(this.props.route.params.id);
     //console.log(this.props.route.params)
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButton);
+    console.log(global.userAddresses);
   }
   componentWillUnmount() {
     BackHandler.removeEventListener('hardwareBackPress', this.handleBackButton);
@@ -227,8 +228,8 @@ class Negocio extends React.Component {
                   <View
                     style={{
                       elevation: 1,
-                      borderRadius: 32,
                       padding: 16,
+                      borderRadius: 32,
                       marginVertical: 32,
                       backgroundColor: '#fff',
                     }}>
@@ -246,7 +247,7 @@ class Negocio extends React.Component {
 
                     <View
                       style={{
-                        height: 400,
+                        height: 350,
                         width: '100%',
                         justifyContent: 'flex-end',
                         alignItems: 'center',
@@ -254,23 +255,24 @@ class Negocio extends React.Component {
                       <MapView
                         paddingAdjustmentBehavior="always"
                         liteMode={true}
+                        scrollEnabled={false}
                         showsUserLocation={true}
                         initialRegion={{
-                          latitude: -74.8128827,
-                          longitude: 11.0140506,
-                          latitudeDelta: 0.0922,
-                          longitudeDelta: 0.0421,
-                        }}
-                        region={{
-                          latitude: -74.8128827,
-                          longitude: 11.0140506,
-                          latitudeDelta: 0.0922,
-                          longitudeDelta: 0.0421,
+                          latitude: this.props.data.location.lat,
+                          longitude: this.props.data.location.lng,
+                          latitudeDelta: 0.0152,
+                          longitudeDelta: 0.01521,
                         }}
                         style={{
                           zIndex: 8,
                           ...StyleSheet.absoluteFillObject,
-                        }}></MapView>
+                        }}>
+                        <Marker
+                          coordinate={{
+                            latitude: this.props.data.location.lat,
+                            longitude: this.props.data.location.lng,
+                          }}></Marker>
+                      </MapView>
                     </View>
                     <Text style={{fontSize: 16}}>
                       {this.props.data.address_notes}, {this.props.data.address}

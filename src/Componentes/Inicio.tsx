@@ -95,6 +95,7 @@ class Inicio extends React.Component {
                 
                 if(r.response.data.result.length > 0){
                     var addressSelected = false
+                    global.userAddresses = []
                     r.response.data.result.forEach((address) => {
                         global.userAddresses.push(address)
                         if(address.default){
@@ -119,7 +120,7 @@ class Inicio extends React.Component {
     }
 
     componentDidMount(){
-       this.cargarUserAddresses()
+        this.cargarUserAddresses()
     }
 
 
@@ -286,7 +287,7 @@ class Inicio extends React.Component {
                                 </Text>
                             </TouchableOpacity>
                             {
-                                this.state.addressResultsList.map((address, i) => (
+                                global.userAddresses.map((address, i) => (
                                     <ListItem key={i} bottomDivider onPress={() => this.onAddressSelected(address.address, address.location)}>
                                         {address.tag == "home" ? 
                                             <Icon name="home" type="font-awesome"></Icon>

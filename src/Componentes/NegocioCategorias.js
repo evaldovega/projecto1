@@ -44,7 +44,7 @@ class NegocioCategorias extends React.Component {
                   <Avatar
                     size={64}
                     avatarStyle={{borderRadius: 24}}
-                    source={{uri: c.image}}
+                    source={c.image != null ? {uri: c.image} : null}
                   />
                   <Text
                     style={{

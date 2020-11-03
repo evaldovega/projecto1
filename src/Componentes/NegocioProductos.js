@@ -76,7 +76,7 @@ class NegocioProductos extends React.Component {
           ]}>
           <Avatar
             size={64}
-            source={{uri: item.images}}
+            source={item.images != null ? {uri: item.images} : null}
             avatarStyle={{borderRadius: 16}}
           />
           {this.badge(item)}

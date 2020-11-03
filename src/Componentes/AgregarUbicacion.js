@@ -121,6 +121,25 @@ class AgregarUbicacion extends React.Component {
     }
   };
 
+  cargarUserAddresses = () => {
+    AsyncStorage.getItem('user').then((user) => {
+      userId = JSON.parse(user).id;
+      global.ordering
+        .users(userId)
+        .addresses()
+        .get()
+        .then(async (r) => {
+          global.userAddresses = [];
+          if (r.response.data.result.length > 0) {
+            r.response.data.result.forEach((address) => {
+              global.userAddresses.push(address);
+            });
+          } else {
+          }
+        });
+    });
+  };
+
   onPressSaveAddress() {
     console.log('onPressedAddress');
     AsyncStorage.getItem('user').then((user) => {
@@ -151,12 +170,14 @@ class AgregarUbicacion extends React.Component {
           },
         )
           .then((response) => {
+            console.log('AGREGAR DIRECCION', response);
             if (response.error) {
               Alert.alert(
                 'Ha ocurrido algo inesperado. Intenta nuevamente',
                 'Error al guardar',
               );
             } else {
+              this.cargarUserAddresses();
               Alert.alert('Dirección guardada con éxito', 'Listo');
               this.props.navigation.pop();
             }

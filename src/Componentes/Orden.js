@@ -24,7 +24,7 @@ class Orden extends React.Component {
   };
 
   componentDidMount() {
-    console.log('Metodos de pago ', this.props.data.paymethods);
+    console.log('Metodos de pago ', this.props.data);
   }
 
   componentDidUpdate(prev) {
@@ -117,7 +117,7 @@ class Orden extends React.Component {
                 justifyContent: 'space-between',
               }}>
               <Text style={{fontSize: 24, color: COLOR_TEXT}}>
-                Total Parcial
+                Total parcial
               </Text>
 
               <CurrencyFormat
@@ -165,6 +165,70 @@ class Orden extends React.Component {
                 )}
               />
             </View>
+            <View
+              style={{
+                marginTop: 16,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+              }}>
+              <Text style={{fontSize: 24, color: COLOR_TEXT}}>
+                Servicio ({this.props.data.service_fee}%)
+              </Text>
+              <CurrencyFormat
+                value={
+                  this.props.productos.reduce(
+                    (a, p) => a + p.quantity * p.price,
+                    0,
+                  ) *
+                  (this.props.data.service_fee / 100)
+                }
+                displayType={'text'}
+                thousandSeparator={true}
+                prefix={'$'}
+                renderText={(v) => (
+                  <Text
+                    style={{
+                      fontSize: 24,
+                      color: COLOR_PRIMARY,
+                      textAlign: 'right',
+                    }}>
+                    {v}
+                  </Text>
+                )}
+              />
+            </View>
+            <View
+              style={{
+                marginTop: 16,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+              }}>
+              <Text style={{fontSize: 24, color: COLOR_TEXT}}>
+                Impuestos ({this.props.data.tax}%)
+              </Text>
+              <CurrencyFormat
+                value={
+                  this.props.productos.reduce(
+                    (a, p) => a + p.quantity * p.price,
+                    0,
+                  ) *
+                  (this.props.data.tax / 100)
+                }
+                displayType={'text'}
+                thousandSeparator={true}
+                prefix={'$'}
+                renderText={(v) => (
+                  <Text
+                    style={{
+                      fontSize: 24,
+                      color: COLOR_PRIMARY,
+                      textAlign: 'right',
+                    }}>
+                    {v}
+                  </Text>
+                )}
+              />
+            </View>
             <Divider style={{marginVertical: 10}}></Divider>
             <View
               style={{
@@ -182,7 +246,17 @@ class Orden extends React.Component {
                   this.props.productos.reduce(
                     (a, p) => a + p.quantity * p.price,
                     0,
-                  )
+                  ) +
+                  this.props.productos.reduce(
+                    (a, p) => a + p.quantity * p.price,
+                    0,
+                  ) *
+                    (this.props.data.service_fee / 100) +
+                  this.props.productos.reduce(
+                    (a, p) => a + p.quantity * p.price,
+                    0,
+                  ) *
+                    (this.props.data.tax / 100)
                 }
                 displayType={'text'}
                 thousandSeparator={true}
