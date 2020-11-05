@@ -1,4 +1,8 @@
 rootProject.name = 'Claka'
+include ':react-native-image-crop-picker'
+project(':react-native-image-crop-picker').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-image-crop-picker/android')
+include ':react-native-onesignal'
+project(':react-native-onesignal').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-onesignal/android')
 include ':react-native-get-location'
 project(':react-native-get-location').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-get-location/android')
 include ':react-native-splash-screen'

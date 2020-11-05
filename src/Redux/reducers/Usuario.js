@@ -1,12 +1,14 @@
 import {
     ACTION_USUARIO_ACCEDIENDO,
     ACTION_USUARIO_ACCESO_CORRECTO,
-    ACTION_USUARIO_ERROR_ACCEDIENDO
+    ACTION_USUARIO_ERROR_ACCEDIENDO,
+    ACTION_USUARIO_PUSH
 } from 'Constantes'
 
 import produce from 'immer';
 const estado_inicial={
         "id": null,
+        "push":"",
         "name": null,
         "lastname": null,
         "email": null,
@@ -47,6 +49,9 @@ export default Usuario = (state = estado_inicial, action) => {
             case ACTION_USUARIO_ACCEDIENDO:
                 draft.accediendo       = true
                 draft.error =   ''
+            break
+            case ACTION_USUARIO_PUSH:
+                draft.push=action.push
             break
             case ACTION_USUARIO_ACCESO_CORRECTO:
                 draft.accediendo    = false

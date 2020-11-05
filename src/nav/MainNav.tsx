@@ -1,7 +1,8 @@
 import 'react-native-gesture-handler';
-import React, {createRef, memo, useCallback, useRef} from 'react';
+import React from 'react';
 import {NavigationContainer, navigationRef, Navigator, ROUTERS, Screen} from "utils/navigation";
 import {StackNavigationOptions} from "@react-navigation/stack";
+import {connect} from 'react-redux'
 // @ts-ignore
 import ScalingDrawer from 'react-native-scaling-drawer';
 import Walkthroughs from "screens/Walkthroughs";
@@ -9,7 +10,7 @@ import ForgotPass from "screens/ForgotPass";
 import SignIn from "screens/SiginIn";
 
 import LeftMenu from "Componentes/Menu";
-
+import OrdenDetalle from 'Componentes/OrdenDetalle'
 import Inicio from "Componentes/Inicio"
 import ValidarSesion from 'Componentes/ValidarSesion'
 import Negocio from 'Componentes/Negocio'
@@ -18,13 +19,6 @@ import Producto from 'Componentes/Producto'
 import Orden from 'Componentes/Orden'
 import Registro from 'Componentes/Registro'
 import AgregarUbicacion from 'Componentes/AgregarUbicacion'
-
-import {Platform} from "react-native";
-
-import {Provider} from 'react-redux';
-import configureStore from 'Redux/configuracion';
-const store = configureStore();
-
 
 const optionNavigator: any = {
     headerShown: false,
@@ -45,34 +39,43 @@ const defaultScalingDrawerConfig = {
     }
 };
 
+class MainNavigation extends React.Component {
+    
+    constructor(props){
+        super(props)
+        this.state={
+            push:''
+        }
+        
+        
+    }
 
-const MainNavigation = memo(() => {
-    const drawer = useRef();
-    const onClose = useCallback(() => {
-        // @ts-ignore
-        drawer.current?.close();
-    }, []);
-    const onOpen = useCallback(() => {
-        // @ts-ignore
-        drawer.current?.open();
-    }, []);
+    onClose=()=>{
+        navigationRef?.current?.closeDrawer()
+    }
+    onOpen=()=>{
+        navigationRef?.current?.openDrawer()
+    }
+    componentDidMount(){
+    }
 
+   
+    componentDidUpdate(prev){
+    }
+
+    render(){
     return (
-        <Provider store={store}>  
         <ScalingDrawer
-            ref={drawer}
-            content={<LeftMenu onClose={onClose} onOpen={onOpen}/>}
+            content={<LeftMenu onClose={this.onClose} onOpen={this.onOpen}/>}
             {...defaultScalingDrawerConfig}
         >
-            <NavigationContainer
-                // @ts-ignore
-                >
+            <NavigationContainer ref={navigationRef}>
                 <Navigator
+                    
                     screenOptions={{
                         headerShown: false,
                         gestureEnabled:false
                     }}
-                    ref={navigationRef}
                     initialRouteName='ValidarSesion'
                 >
                     
@@ -89,12 +92,20 @@ const MainNavigation = memo(() => {
                     <Screen name='Orden' component={Orden} options={optionNavigator}/>
                     <Screen name='Registro' component={Registro} options={optionNavigator}/>
                     <Screen name='AgregarUbicacion' component={AgregarUbicacion} options={optionNavigator}/>
+                    <Screen name='OrdenDetalle' component={OrdenDetalle} options={optionNavigator}/>
                 </Navigator>
               
             </NavigationContainer>
         </ScalingDrawer>
-        </Provider>
-    );
-});
+        
+    )
+    }
+}
 
-export default MainNavigation;
+const mapearEstadp=state=>{
+    return {
+        id:state.Usuario.id
+    }
+}
+
+export default connect(mapearEstadp)(MainNavigation);

@@ -1,8 +1,8 @@
 import React from 'react';
-import {View, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, Alert, ScrollView, StatusBar,Image,VirtualizedList,Animated, Easing,RefreshControl, Modal} from "react-native";
+import {View, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, Alert, ScrollView, StatusBar,Image,VirtualizedList,Animated, Easing,RefreshControl, Modal, PushNotificationIOS} from "react-native";
 import {getStatusBarHeight} from "react-native-iphone-x-helper";
 import {Montserrat} from "utils/fonts";
-import {COLOR_ACCENT, COLOR_PRIMARY, COLOR_TEXT,COLOR_BG_TAPBAR,COLOR_BG, COLOR_DESATIVADO} from 'Constantes'
+import {COLOR_ACCENT, COLOR_PRIMARY, COLOR_TEXT,COLOR_BG_TAPBAR,COLOR_BG, COLOR_DESATIVADO,API_PROJECT_NAME} from 'Constantes'
 import {SearchBar,Divider,Rating,ListItem, Avatar,Icon} from 'react-native-elements'
 import SvgOption from "svgs/staticsHealth/SvgOptions";
 import SvgSetting from "svgs/staticsHealth/SvgSetting";
@@ -11,7 +11,8 @@ import LottieView from 'lottie-react-native';
 import {connect} from 'react-redux'
 import AsyncStorage from '@react-native-community/async-storage'
 import TabBar from 'Componentes/TabBar'
-
+import OneSignal from 'react-native-onesignal';
+import {SET_PUSH} from 'Redux/actions/Usuario'
 
 const logo=require('imagenes/logo.png')
 
@@ -19,6 +20,7 @@ class Footer extends React.Component{
     state = {
         progress: new Animated.Value(0),
     };
+   
     componentDidUpdate(prev){
         if(prev.animar!=this.props.animar && this.props.animar){
             Animated.timing(this.state.progress, {toValue: 1,duration:800,easing: Easing.linear}).start();
@@ -55,6 +57,53 @@ class Inicio extends React.Component {
         addressResultsList: [],
     }
 
+    constructor(props){
+        super(props)
+        setTimeout(()=>{
+            OneSignal.addEventListener('ids', this.onIds);
+        },4000)
+       
+    }
+   
+
+    notificacionRecivida=(notification)=>{
+        //console.log("Notificacion recivida ",notification)
+        //this.gestionNotificacion(notification.payload.additionalData)
+    }
+    notificacionAbierta=(notification)=>{
+        this.gestionNotificacion(notification.notification.payload.additionalData)
+    }
+
+    gestionNotificacion=(notificacion)=>{
+        switch(notificacion.type){
+            case "order_message":
+                this.props.navigation.push('OrdenDetalle',{id:notificacion.order_id})
+            break
+        }
+    }
+
+    onIds=async (devices)=>{
+        let token_actual=await  AsyncStorage.getItem("push")
+        console.log("Token actual ",token_actual)
+        if(token_actual!=devices.pushToken){
+            console.log("Actualizar push token")
+            global.ordering.users(this.props.id).save({push_notifications:devices.pushToken})
+            AsyncStorage.setItem("push",devices.pushToken)
+        }
+    }
+
+    componentDidMount(){
+        this.cargarUserAddresses()
+        OneSignal.addEventListener('received', this.notificacionRecivida);
+        OneSignal.addEventListener('opened', this.notificacionAbierta);
+        this.props.navigation.push('OrdenDetalle',{id:576})
+    }
+
+    componentWillUnmount(){
+        OneSignal.removeEventListener('received', this.notificacionRecivida);
+        OneSignal.removeEventListener('opened', this.notificacionAbierta);
+    }
+
     cargar=()=>{
         this.setState({cargando:true,q:""})
         console.log("LATLONG", `${this.state.lat},${this.state.lng}`)
@@ -88,7 +137,7 @@ class Inicio extends React.Component {
 
     cargarUserAddresses=()=> {
         AsyncStorage.getItem("user").then((user)=>{
-            userId = JSON.parse(user).id
+            let userId = JSON.parse(user).id
             this.setState({userId: userId})
             global.ordering.users(userId).addresses().get().then(async(r) => {
                 this.setState({addressResultsList: r.response.data.result})
@@ -117,10 +166,6 @@ class Inicio extends React.Component {
             });
         })
         
-    }
-
-    componentDidMount(){
-        this.cargarUserAddresses()
     }
 
 
@@ -400,10 +445,18 @@ class Inicio extends React.Component {
 
 const mapearEstado=state=>{
     return {
+        id:state.Usuario.id,
         name:state.Usuario.name
     }
 }
-export default connect(mapearEstado)(Inicio);
+const mapearAcciones=d=>{
+    return {
+        set_push:(push)=>{
+            d(SET_PUSH(push))
+        }
+    }
+}
+export default connect(mapearEstado,mapearAcciones)(Inicio);
 
 const styles = StyleSheet.create({
     container: {

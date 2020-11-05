@@ -12,19 +12,25 @@ import {
 import {getStatusBarHeight} from 'react-native-iphone-x-helper';
 import {Lato, Montserrat} from 'utils/fonts';
 import CurrencyFormat from 'react-currency-format';
-import {Divider, ListItem, Avatar, Button, Icon} from 'react-native-elements';
-import {COLOR_DESATIVADO, COLOR_PRIMARY, COLOR_TEXT} from 'Constantes';
+import {Divider, ListItem, Avatar, Button, Icon,BottomSheet,Header} from 'react-native-elements';
+import {COLOR_BG_TAPBAR, COLOR_DESATIVADO, COLOR_PRIMARY, COLOR_TEXT} from 'Constantes';
 import {borrarProducto, vaciar} from 'Redux/actions/Pedido';
 import {connect} from 'react-redux';
+import moment from 'moment'
 
 const alturaBottom = 54 + getStatusBarHeight();
 class Orden extends React.Component {
   state = {
     orden: {},
+    direccion:null,
+    tipo_envio:1,
+    metodo_pago:null,
+    mostrar_direcciones:false,
+    mostrar_metodos_pago:false
   };
 
   componentDidMount() {
-    console.log('Metodos de pago ', this.props.data);
+    //console.log('Metodos de pago ', this.props.data.paymethods[0]);
   }
 
   componentDidUpdate(prev) {
@@ -73,6 +79,81 @@ class Orden extends React.Component {
     });
   };
 
+  establecerDireccion=(d)=>{
+      this.setState({
+          mostrar_direcciones:false,
+          direccion:d
+      })
+  }
+  establecerMetodoPago=(d)=>{
+    this.setState({
+        mostrar_metodos_pago:false,
+        metodo_pago:d
+    })
+}
+
+  renderDirecciones=()=>{
+    return (<BottomSheet isVisible={this.state.mostrar_direcciones}>
+            <Header containerStyle={{backgroundColor:'#ffff'}} 
+            centerComponent={{ text: 'Mis direcciones', style: { color: COLOR_PRIMARY} }}
+            rightComponent={{ icon: 'close', color: COLOR_PRIMARY,onPress:()=>{this.setState({mostrar_direcciones:false})} }}
+            />
+            {global.userAddresses.map((l, i) => (
+            <ListItem key={i} onPress={()=>this.establecerDireccion(l)}>
+                <ListItem.Content>
+                <ListItem.Title>{l.address}</ListItem.Title>
+                </ListItem.Content>
+            </ListItem>
+            ))}
+        </BottomSheet>)
+  }
+
+  renderMetodosPago=()=>{
+    return (<BottomSheet isVisible={this.state.mostrar_metodos_pago}>
+            <Header containerStyle={{backgroundColor:'#ffff'}} 
+            centerComponent={{ text: 'Metodos de pago', style: { color: COLOR_PRIMARY} }}
+            rightComponent={{ icon: 'close', color: COLOR_PRIMARY,onPress:()=>{this.setState({mostrar_metodos_pago:false})} }}
+            />
+            {this.props.data.paymethods.map((l, i) => (
+            <ListItem key={i} onPress={()=>this.establecerMetodoPago(l)}>
+                <ListItem.Content>
+                <ListItem.Title>{l.paymethod.name}</ListItem.Title>
+                </ListItem.Content>
+            </ListItem>
+            ))}
+        </BottomSheet>)
+  }
+
+  guardar=async ()=>{
+      console.log("Guardar")
+      let productos=this.props.productos.map(p=>{
+          return {
+              id:p.id,
+              price:p.price,
+              quantity:p.quantity,
+              comment:p.comment,
+              ingredients:p.ingredients,
+              options:p.options
+          }
+      })
+      let data={
+        customer_id:this.props.id,
+        paymethod_id:this.state.metodo_pago.paymethod_id,
+        business_id:this.props.data.id,
+        delivery_type:this.state.tipo_envio,
+        location:this.state.direccion.location,
+        products:productos
+      }
+      console.log(JSON.stringify(data))
+      let r=await global.ordering.orders().save(data);
+      console.log(r.response.data.error)
+      console.log(r.response.data.result)
+      if(r.response.data.error){
+          Alert.alert('No se pudo completar el pedido',r.response.data.result.join("\n"))
+      }
+  }
+
+
   render() {
     return (
       <View style={{flex: 1, backgroundColor: '#ffff'}}>
@@ -98,6 +179,9 @@ class Orden extends React.Component {
             onPress={this.props.vaciar}
           />
         </View>
+
+       
+
         <ScrollView style={{flex: 1}}>
           <Text
             style={{
@@ -242,22 +326,23 @@ class Orden extends React.Component {
               </Text>
               <CurrencyFormat
                 value={
-                  this.props.data.delivery_price +
+                  parseFloat(this.props.data.delivery_price) +
                   this.props.productos.reduce(
-                    (a, p) => a + p.quantity * p.price,
+                    (a, p) => a + parseFloat(p.quantity) * p.price,
                     0,
                   ) +
                   this.props.productos.reduce(
-                    (a, p) => a + p.quantity * p.price,
+                    (a, p) => a + parseFloat(p.quantity) * p.price,
                     0,
                   ) *
-                    (this.props.data.service_fee / 100) +
+                    (parseFloat(this.props.data.service_fee) / 100) +
                   this.props.productos.reduce(
                     (a, p) => a + p.quantity * p.price,
                     0,
                   ) *
-                    (this.props.data.tax / 100)
+                    (parseFloat(this.props.data.tax) / 100)
                 }
+                decimalScale={2}
                 displayType={'text'}
                 thousandSeparator={true}
                 prefix={'$'}
@@ -273,35 +358,108 @@ class Orden extends React.Component {
                 )}
               />
             </View>
+            <Divider style={{marginVertical: 10}}></Divider>
+
+            <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            backgroundColor: COLOR_BG_TAPBAR,
+            borderRadius: 32,
+            marginHorizontal: 16,
+            overflow: 'hidden',
+            marginVertical: 16,
+          }}>
+            <TouchableOpacity
+                style={[
+                styles.botonTab,
+                this.state.tipo_envio == 1 ? {backgroundColor: COLOR_PRIMARY} : {},
+                ]}
+                onPress={() => this.setState({tipo_envio: 1})}>
+                <Text
+                style={
+                    (styles.textTab,
+                    this.state.tipo_envio == 1 ? {color: '#ffff'} : {})
+                }>
+                Domicilio
+                </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={[
+                styles.botonTab,
+                this.state.tipo_envio == 2 ? {backgroundColor: COLOR_PRIMARY} : {},
+                ]}
+                onPress={() => this.setState({tipo_envio: 2})}>
+                <Text
+                style={
+                    (styles.textTab,
+                    this.state.tipo_envio == 2 ? {color: '#ffff'} : {})
+                }>
+                Recoger
+                </Text>
+                </TouchableOpacity>
+            </View>
+
+                {this.state.tipo_envio==1 ? <TouchableOpacity style={{marginTop:16}} onPress={()=>this.setState({mostrar_direcciones:true})}>
+                    <View style={{flexDirection:'row'}}>
+
+                        <Icon name='navigate-outline' type="ionicon"
+                        color={COLOR_PRIMARY}
+                        size={24}/>
+
+                        <Text style={{flex:1,fontSize:18}}>{this.state.direccion ? this.state.direccion.address : 'Seleccione una dirección'}</Text>
+                        <Icon name='chevron-down' type="ionicon"
+                        color={COLOR_PRIMARY}
+                        size={24}/>
+                    </View>
+                </TouchableOpacity>:<></>}
+
+                <TouchableOpacity style={{marginTop:16}} onPress={()=>this.setState({mostrar_metodos_pago:true})}>
+                    <View style={{flexDirection:'row'}}>
+                        <Icon name='card-outline' type="ionicon"
+                        color={COLOR_PRIMARY}
+                        size={24}/>
+                        <Text style={{flex:1,fontSize:18}}>{this.state.metodo_pago ? this.state.metodo_pago.paymethod.name : 'Seleccione un metodo de pago'}</Text>
+                        <Icon name='chevron-down' type="ionicon"
+                        color={COLOR_PRIMARY}
+                        size={24}/>
+                    </View>
+                </TouchableOpacity>
+                
           </View>
 
           <View style={{height: 60}}></View>
         </ScrollView>
-
-        <View
-          style={{
-            position: 'absolute',
-            width: '90%',
-            height: alturaBottom,
-            bottom: 0,
-            left: '5%',
-            backgroundColor: COLOR_PRIMARY,
-            borderTopEndRadius: 24,
-            borderTopStartRadius: 24,
-            padding: 32,
-            justifyContent: 'center',
-          }}>
-          <Text
+            {this.renderDirecciones()}
+            {this.renderMetodosPago()}
+            <TouchableOpacity onPress={()=>this.guardar()}>
+            <View
             style={{
-              fontSize: 18,
-              fontWeight: 'bold',
-              color: '#fff',
-              textAlign: 'center',
-              alignSelf: 'center',
+                alignSelf:'center',
+                width: '90%',
+                height: alturaBottom,
+                backgroundColor: COLOR_PRIMARY,
+                borderTopEndRadius: 24,
+                borderTopStartRadius: 24,
+                padding: 32,
+                zIndex:99,
+                elevation:1,
+                justifyContent: 'center',
             }}>
-            Ordenar ahora
-          </Text>
-        </View>
+                <Text
+                    style={{
+                    fontSize: 18,
+                    fontWeight: 'bold',
+                    color: '#fff',
+                    textAlign: 'center',
+                    alignSelf: 'center',
+                    }}>
+                    Ordenar ahora
+                </Text>
+            </View>
+        </TouchableOpacity>
+        
+
       </View>
     );
   }
@@ -309,6 +467,7 @@ class Orden extends React.Component {
 
 const mapearEstado = (state) => {
   return {
+      id:state.Usuario.id,
     data: state.Negocio.data,
     productos: state.Pedido.productos,
   };
@@ -348,6 +507,15 @@ const mapearAcciones = (dispatch) => {
 export default connect(mapearEstado, mapearAcciones)(Orden);
 
 const styles = StyleSheet.create({
+    botonTab: {
+        flex: 1,
+        padding: 16,
+        borderRadius: 32,
+        alignItems: 'center',
+      },
+      textTab: {
+        textAlign: 'center',
+      },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
