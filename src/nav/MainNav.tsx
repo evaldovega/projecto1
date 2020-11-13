@@ -19,6 +19,8 @@ import Producto from 'Componentes/Producto'
 import Orden from 'Componentes/Orden'
 import Registro from 'Componentes/Registro'
 import AgregarUbicacion from 'Componentes/AgregarUbicacion'
+import Profile from 'screens/Profile';
+import MisOrdenes from 'Componentes/MisOrdenes';
 
 const optionNavigator: any = {
     headerShown: false,
@@ -82,6 +84,7 @@ class MainNavigation extends React.Component {
                     
                     <Screen name={ROUTERS.ForgotPassword} component={ForgotPass} options={optionNavigator}/>
                     <Screen name={ROUTERS.SignIn} component={SignIn} options={optionNavigator}/>
+                    <Screen name={ROUTERS.Profile} component={Profile} options={optionNavigator}/>
                     
                     
                     <Screen name='ValidarSesion' component={ValidarSesion} options={optionNavigator}/>
@@ -93,6 +96,7 @@ class MainNavigation extends React.Component {
                     <Screen name='Registro' component={Registro} options={optionNavigator}/>
                     <Screen name='AgregarUbicacion' component={AgregarUbicacion} options={optionNavigator}/>
                     <Screen name='OrdenDetalle' component={OrdenDetalle} options={optionNavigator}/>
+                    <Screen name='MisOrdenes' component={MisOrdenes} options={optionNavigator}/>
                 </Navigator>
               
             </NavigationContainer>

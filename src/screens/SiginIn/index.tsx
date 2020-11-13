@@ -1,6 +1,6 @@
 import React, {memo, useCallback,useState } from 'react';
 import {View, StyleSheet, TouchableOpacity, Text, Alert, Image, ImageBackground} from "react-native";
-import {useNavigation} from "@react-navigation/native";
+import {useNavigation, CurrentRenderContext} from "@react-navigation/native";
 import Header from "screens/SiginIn/components/Header";
 import Input from "screens/SiginIn/components/Input";
 import {Montserrat} from "utils/fonts";
@@ -11,19 +11,21 @@ import AsyncStorage from '@react-native-community/async-storage'
 import { COLOR_PRIMARY } from 'Constantes';
 import LottieView from 'lottie-react-native';
 
-const SignIn = memo(() => {
-    const {navigate} = useNavigation();
-    const [email,setEmail]=useState('evaldo.vega@gmail.com')
-    const [password,setPassword]=useState('12345678')
+class SignIn extends React.Component {
+    
+    state = {
+        email: "",
+        password: ""
+    }
 
-    const onPressSignIn = useCallback(()=>{
+    onPressSignIn(){
         //navigate(ROUTERS.Dashboard);
-        console.log("EMAIL ",email)
-        console.log("PASWORD ",password)
+        console.log("EMAIL ",this.state.email)
+        console.log("PASWORD ",this.state.password)
         global.ordering.users().auth(
             {
-                email: email,
-                password: password
+                email: this.state.email,
+                password: this.state.password
             }
         ).then(async (r)=>{
             console.log(r)
@@ -34,57 +36,59 @@ const SignIn = memo(() => {
                 
                 await AsyncStorage.setItem('token',session.access_token)
                 await AsyncStorage.setItem('user',JSON.stringify({id,name,lastname,birthdate,email,phone,photo,data_map}))
-                navigate('Inicio');
+                this.props.navigation.navigate('Inicio');
             }
         }).catch(error=>{
             console.log("ERROR")
             console.log(error)
         })
-    },[])
+    }
 
-    const onPressForgot = useCallback(()=>{
-      navigate(ROUTERS.ForgotPassword);
-    },[])
+    onPressForgot() {
+        this.props.navigation.navigate(ROUTERS.ForgotPassword);
+    }
 
-    return (
-        <View style={styles.container}>
-        <ImageBackground
-          source={require('imagenes/bgfondo.png')}
-          style={styles.bgimage}>
-            <Image source={require('imagenes/logo-negro.png')} style={{alignSelf:'center',marginTop:-20,marginBottom:0,width:250,resizeMode:'contain'}}></Image>
-            <LottieView autoPlay loop={false} autoSize style={{width:'100%',top:0,position:"absolute",left:0}} source={require('Animaciones/confetti.json')}/>
-            <Input mt={10} placeholder={'Email'} value={email} onChangeText={t=>setEmail(t)} />
-            <Input mt={16} pass={true} placeholder={'Contraseña'} value= {password} onChangeText={t=>setPassword(t)}/>
-            <View style={styles.containerSignIn}>
-                <TouchableOpacity style={styles.btnSignIn} onPress={onPressSignIn}>
-                    <Text style={styles.txtSignIn}>ACCEDER</Text>
+    render(){
+        return (
+            <View style={styles.container}>
+            <ImageBackground
+            source={require('imagenes/bgfondo.png')}
+            style={styles.bgimage}>
+                <Image source={require('imagenes/logo-negro.png')} style={{alignSelf:'center',marginTop:-20,marginBottom:0,width:250,resizeMode:'contain'}}></Image>
+                <LottieView autoPlay loop={false} autoSize style={{width:'100%',top:0,position:"absolute",left:0}} source={require('Animaciones/confetti.json')}/>
+                <Input mt={10} placeholder={'Email'} value={this.state.email} onChangeText={(e)=>this.setState({email: e})} />
+                <Input mt={16} pass={true} placeholder={'Contraseña'} value={this.state.password} onChangeText={(t)=>this.setState({password: t})}/>
+                <View style={styles.containerSignIn}>
+                    <TouchableOpacity style={styles.btnSignIn} onPress={() => this.onPressSignIn()}>
+                        <Text style={styles.txtSignIn}>ACCEDER</Text>
+                    </TouchableOpacity>
+                </View>
+                <TouchableOpacity style={styles.btnForgot} onPress={() => this.onPressForgot()}>
+                    <Text style={styles.txtForgot}>¿Olvidaste tu contraseña?</Text>
                 </TouchableOpacity>
+
+                <View style={styles.containerOr}>
+                    <View style={styles.line}/>
+                    <Text style={styles.txtOr}>O</Text>
+                    <View style={styles.line}/>
+                </View>
+
+                <TouchableOpacity style={styles.btnSignFb} onPress={() => navigate('Registro')}>
+                    <Text style={styles.txtSignInFb}>Regístrate ahora</Text>
+                </TouchableOpacity>
+
+                { /*
+                <TouchableOpacity style={styles.btnSignInGoogle}>
+                    <Text style={styles.txtSignInFb}>Sign In With Google</Text>
+                </TouchableOpacity>
+                */ }
+
+                
+                </ImageBackground>
             </View>
-            <TouchableOpacity style={styles.btnForgot} onPress={onPressForgot}>
-                <Text style={styles.txtForgot}>¿Olvidaste tu contraseña?</Text>
-            </TouchableOpacity>
-
-            <View style={styles.containerOr}>
-                <View style={styles.line}/>
-                <Text style={styles.txtOr}>O</Text>
-                <View style={styles.line}/>
-            </View>
-
-            <TouchableOpacity style={styles.btnSignFb} onPress={() => navigate('Registro')}>
-                <Text style={styles.txtSignInFb}>Regístrate ahora</Text>
-            </TouchableOpacity>
-
-            { /*
-            <TouchableOpacity style={styles.btnSignInGoogle}>
-                <Text style={styles.txtSignInFb}>Sign In With Google</Text>
-            </TouchableOpacity>
-            */ }
-
-            
-            </ImageBackground>
-        </View>
-    )
-});
+        )
+    }
+}
 
 export default SignIn;
 

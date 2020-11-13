@@ -1,5 +1,5 @@
 import React, {memo} from 'react';
-import {View, StyleSheet, Text, TouchableOpacity, ScrollView} from "react-native";
+import {View, StyleSheet, Text, TouchableOpacity, ScrollView, StatusBar, TouchableHighlightBase} from "react-native";
 import SvgClient1 from "svgs/profile/SvgClient1";
 import SvgClient2 from "svgs/profile/SvgClient2";
 import SvgClient3 from "svgs/profile/SvgClient3";
@@ -13,6 +13,13 @@ import {getStatusBarHeight} from "react-native-iphone-x-helper";
 import {Lato, Montserrat} from "utils/fonts";
 import SvgBack from "svgs/profile/SvgBack";
 import SvgNoti from "svgs/profile/SvgNoti";
+import { COLOR_PRIMARY } from 'Constantes';
+import {connect} from 'react-redux';
+import { Icon } from "react-native-elements";
+import Input from 'screens/SiginIn/components/Input';
+import {SET} from 'Redux/actions/Usuario'
+import AsyncStorage from '@react-native-community/async-storage';
+import { ROUTERS } from 'utils/navigation';
 
 const dataClient = [
     SvgClient1,
@@ -36,91 +43,128 @@ const dataWork = [
     }
 ];
 
-const Profile = memo(() => {
-    return (
-        <View style={styles.container}>
-            <TouchableOpacity style={styles.back}>
-                <SvgBack/>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.noti}>
-                <SvgNoti/>
-            </TouchableOpacity>
 
-            <ScrollView>
-                <SvgAvatar style={styles.avatar}/>
-                <Text style={styles.name}>
-                    Nannie Williams
-                </Text>
-                <Text style={styles.job}>
-                    Senior Maketer
-                </Text>
-                <TouchableOpacity style={styles.btnUpdate}>
-                    <Text style={styles.txtUpdate}>Upgrade Premium</Text>
-                </TouchableOpacity>
 
-                <View style={styles.containerInfo}>
-                    <View style={styles.col}>
-                        <Text style={styles.value}>
-                            3.890
-                        </Text>
-                        <Text style={styles.title}>
-                            Follower
-                        </Text>
-                    </View>
-                    <View style={styles.line}/>
-                    <View style={styles.col}>
-                        <Text style={styles.value}>
-                            257
-                        </Text>
-                        <Text style={styles.title}>
-                            Project
-                        </Text>
-                    </View>
-                    <View style={styles.line}/>
-                    <View style={styles.col}>
-                        <Text style={styles.value}>
-                            10.468
-                        </Text>
-                        <Text style={styles.title}>
-                            Loves
-                        </Text>
-                    </View>
+class Profile extends React.Component {
+
+    componentDidUpdate(){
+        console.log(this.props.usuario.name)
+    }
+
+    state = {
+        password: "",
+    }
+
+    actualizarUsuarioData() {
+        const userData = {
+            name: this.props.usuario.name,
+            lastname: this.props.usuario.lastname,
+            email: this.props.usuario.email,
+            cellphone: this.props.usuario.cellphone,
+            password: this.state.password != "" ? this.state.password : null
+        }
+        global.ordering.users(this.props.usuario.id).save(userData).then(r => {
+            console.log(r.response.error)
+            
+            global.ordering.users(this.props.usuario.id).get().then(r => {
+                const {id,name,lastname,birthdate,email,phone,cellphone,photo,data_map,session}=r.response.data.result
+                AsyncStorage.setItem('user',JSON.stringify({id,name,lastname,birthdate,email,phone,cellphone,photo,data_map}))
+            })
+            
+        })
+    }
+
+    cerrarSesion() {
+        global.ordering.users().logout().then(r => {
+            if(r.response.error){
+                console.log(r.response)
+            }else{
+                
+                AsyncStorage.removeItem("user");
+                AsyncStorage.removeItem("token");
+
+                this.props.navigation.navigate(ROUTERS.SignIn);
+            }
+        })
+    }
+
+    render(){
+        return (
+            <View style={styles.container}>
+                <StatusBar
+                    translucent={true}
+                    backgroundColor={'transparent'}
+                    barStyle={'light-content'}
+                    style={{zIndex: 9}}
+                />
+                <View style={[styles.header, {position: 'relative'}]}>
+                    <View
+                    style={{
+                        backgroundColor: COLOR_PRIMARY,
+                        position: 'absolute',
+                        width: '100%',
+                        height: 96,
+                    }}></View>
+                    
+                    <Text style={styles.title}>Perfil</Text>
+                    <TouchableOpacity
+                        style={styles.btnClose}
+                        onPress={() => this.props.navigation.pop()}>
+                        <Icon
+                            name="chevron-back"
+                            type="ionicon"
+                            color="#ffff"
+                            size={24}
+                        />
+                    </TouchableOpacity>
                 </View>
 
-                <View style={styles.content}>
-                    <Text style={styles.titleContent}>Our Clients (24)</Text>
-                    <View style={styles.client}>
-                        <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-                            {
-                                dataClient.map((Item, index) => {
-                                    return <Item key={index} style={{marginRight: 25}}/>
-                                })
-                            }
-                        </ScrollView>
-                    </View>
-                    <Text style={styles.titleContent}>Latest Works</Text>
-                    <View style={styles.work}>
-                        <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-                            {
-                                dataWork.map((item, index) => {
-                                    const {Svg, title} = item;
-                                    return <View key={index}>
-                                        <Svg style={styles.svgWork}/>
-                                        <Text style={styles.titleWork}>
-                                            {title}
-                                        </Text>
-                                    </View>
-                                })
-                            }
-                        </ScrollView>
-                    </View>
-                </View>
-            </ScrollView>
-        </View>
-    )
-});
+                <ScrollView>
+                    <SvgAvatar style={styles.avatar}/>
+                    <Text style={styles.name}>
+                        {this.props.usuario.name} {this.props.usuario.lastname}
+                    </Text>
+                    <Text style={styles.job}>
+                        {this.props.usuario.email}
+                    </Text>
+                    <TouchableOpacity style={styles.btnUpdate} onPress={() => { this.cerrarSesion(); }}>
+                        <Text style={styles.txtUpdate}>Cerrar sesión</Text>
+                    </TouchableOpacity>
 
-export default Profile;
+
+                    <View style={styles.content}>
+                        <Text style={styles.titleContent}>Actualiza tus datos</Text>
+                        <View style={styles.client}>
+                            <Input mt={20} value={this.props.usuario.name} onChangeText={(t) => this.props.cambiarPropiedadUsuario({name: t})} placeholder={"Nombre"} />
+                            <Input mt={10} value={this.props.usuario.lastname} onChangeText={(t) => this.props.cambiarPropiedadUsuario({lastname: t})} placeholder={"Apellido"} />
+                            <Input mt={10} value={this.props.usuario.email} onChangeText={(t) => this.props.cambiarPropiedadUsuario({email: t})} placeholder={"Correo electrónico"} />
+                            <Input mt={10} pass={true} placeholder={"Contraseña"} onChangeText={(p) => this.setState({password: p})} />
+                            <Input mt={10} value={this.props.usuario.cellphone} onChangeText={(t) => this.props.cambiarPropiedadUsuario({cellphone: t})} placeholder={"Teléfono celular"} />
+                            
+                            <TouchableOpacity style={styles.btnSignIn} onPress={() => {this.actualizarUsuarioData()}}>
+                                <Text style={{color:'white'}}>Actualizar datos</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </ScrollView>
+            </View>
+        )
+    }
+}
+const mapearEstado = e => {
+    return {
+        usuario: e.Usuario
+    }
+}
+
+const mapearAcciones = e => {
+    return {
+        cambiarPropiedadUsuario: (data) => {
+            e(SET(data))
+        }
+    }
+}
+export default connect(mapearEstado, mapearAcciones)(Profile);
 
 const styles = StyleSheet.create({
     container: {
@@ -187,9 +231,10 @@ const styles = StyleSheet.create({
         color: '#1A051D'
     },
     title: {
-        fontFamily: Lato,
-        fontSize: 12,
-        color: '#6D5F6F'
+        fontFamily: Montserrat,
+        fontSize: 17,
+        color: '#fff',
+        fontWeight: '500'
     },
     line: {
         width: 1,
@@ -201,15 +246,16 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFF',
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
-        paddingLeft: 32,
-        paddingBottom: 20
+        paddingBottom: 20,
+        marginTop: 40,
     },
     titleContent: {
         fontFamily: Montserrat,
         fontSize: 16,
         color: '#1A051D',
         textTransform: 'uppercase',
-        marginTop: 28
+        marginTop: 28,
+        alignSelf: 'center',
     },
     titleWork: {
         position: 'absolute',
@@ -225,10 +271,33 @@ const styles = StyleSheet.create({
     },
     client: {
         marginTop: 12,
-        height: 48,
-        marginBottom: 32
     },
+    btnSignIn: {
+        backgroundColor: COLOR_PRIMARY,
+        borderRadius: 24,
+        width: '80%',
+        marginLeft: '10%',
+        marginTop: 40,
+        height: 48,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
     work: {
         marginTop: 16
-    }
+    },
+    header: {
+        backgroundColor: COLOR_PRIMARY,
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+        height: 96,
+        overflow: 'hidden',
+        paddingTop: getStatusBarHeight(),
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    btnClose: {
+        position: 'absolute',
+        bottom: 20,
+        left: 16,
+    },
 });

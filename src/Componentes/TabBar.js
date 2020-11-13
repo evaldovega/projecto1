@@ -26,7 +26,8 @@ class TabBar extends React.Component {
           height: 70,
         }}>
         <View style={{flexDirection: 'row', justifyContent: 'center'}}>
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => this.props.navigation.navigate('MisOrdenes')}>
             <Icon
               name="receipt"
               type="font-awesome-5"
@@ -63,7 +64,8 @@ class TabBar extends React.Component {
               />
             </View>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => this.props.navigation.navigate('Profile')}>
             <Icon
               name="account-circle"
               type="material-community"

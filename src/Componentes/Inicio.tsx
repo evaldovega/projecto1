@@ -3,7 +3,7 @@ import {View, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, Aler
 import {getStatusBarHeight} from "react-native-iphone-x-helper";
 import {Montserrat} from "utils/fonts";
 import {COLOR_ACCENT, COLOR_PRIMARY, COLOR_TEXT,COLOR_BG_TAPBAR,COLOR_BG, COLOR_DESATIVADO,API_PROJECT_NAME} from 'Constantes'
-import {SearchBar,Divider,Rating,ListItem, Avatar,Icon} from 'react-native-elements'
+import {SearchBar,Divider,Rating,ListItem, Avatar,Icon,BottomSheet, AirbnbRating} from 'react-native-elements'
 import SvgOption from "svgs/staticsHealth/SvgOptions";
 import SvgSetting from "svgs/staticsHealth/SvgSetting";
 import LinearGradient from 'react-native-linear-gradient';
@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-community/async-storage'
 import TabBar from 'Componentes/TabBar'
 import OneSignal from 'react-native-onesignal';
 import {SET_PUSH} from 'Redux/actions/Usuario'
+import SvgClose from 'svgs/forgotPass/SvgClose';
 
 const logo=require('imagenes/logo.png')
 
@@ -94,9 +95,10 @@ class Inicio extends React.Component {
 
     componentDidMount(){
         this.cargarUserAddresses()
+        this.buscarOrdenesSinCalificar()
         OneSignal.addEventListener('received', this.notificacionRecivida);
         OneSignal.addEventListener('opened', this.notificacionAbierta);
-        this.props.navigation.push('OrdenDetalle',{id:576})
+        // this.props.navigation.push('OrdenDetalle',{id:576})
     }
 
     componentWillUnmount(){
@@ -140,6 +142,10 @@ class Inicio extends React.Component {
             let userId = JSON.parse(user).id
             this.setState({userId: userId})
             global.ordering.users(userId).addresses().get().then(async(r) => {
+                if(r.response.data.result.length == 0){
+                    Alert.alert("Debes tener al menos una dirección registrada", "");
+                    this.props.navigation.navigate('AgregarUbicacion')
+                }
                 this.setState({addressResultsList: r.response.data.result})
                 
                 if(r.response.data.result.length > 0){
@@ -150,6 +156,7 @@ class Inicio extends React.Component {
                         if(address.default){
                             this.setState(address.location)
                             this.setState({primeraDireccion: address.address})
+                            global.addressSelected = address
                             addressSelected = true
                         }
                     })
@@ -158,6 +165,7 @@ class Inicio extends React.Component {
                         let address = r.response.data.result[0]
                         this.setState(address.location)
                         this.setState({primeraDireccion: address.address})
+                        global.addressSelected = address
                     }
                     this.cargar()
                 }else{
@@ -166,6 +174,12 @@ class Inicio extends React.Component {
             });
         })
         
+    }
+
+    buscarOrdenesSinCalificar = () => {
+        global.ordering.orders().get().then(r => {
+            console.log("ordenes", r.response)
+        })
     }
 
 
@@ -308,7 +322,12 @@ class Inicio extends React.Component {
         }
     }
 
-    onAddressSelected = (address, location) => {
+    ratingCompleted(rating) {
+        console.log("Rating is: " + rating)
+    }
+
+    onAddressSelected = (addressObj, address, location) => {
+        global.addressSelected = addressObj
         this.setState({primeraDireccion: address, lat: location.lat, lng:location.lng, addressListVisible: false})
         this.cargar()
     }
@@ -322,9 +341,12 @@ class Inicio extends React.Component {
                     visible={this.state.addressListVisible}>
                     <View style={styles.modalBackground}>
                         <View style={styles.cardOverlay}>
-                            <Text style={{fontSize:24, fontWeight:'bold'}}>
-                                Mis direcciones
-                            </Text>
+                            <View style={{flexDirection:'row', justifyContent:'space-between'}}>
+                                <Text style={{fontSize:24, fontWeight:'bold'}}>
+                                    Mis direcciones
+                                </Text>
+                                <TouchableOpacity onPress={() => {this.setState({addressListVisible: false})}}><SvgClose /></TouchableOpacity>
+                            </View>
                             <TouchableOpacity style={styles.btnAgregar} onPress={() => {this.setState({addressListVisible: false});this.props.navigation.navigate('AgregarUbicacion')}}>
                                 <Icon name='plus' type='font-awesome' color='#ffff' size={24} style={{marginRight:4}}></Icon>
                                 <Text style={{color:'white'}}>
@@ -333,7 +355,7 @@ class Inicio extends React.Component {
                             </TouchableOpacity>
                             {
                                 global.userAddresses.map((address, i) => (
-                                    <ListItem key={i} bottomDivider onPress={() => this.onAddressSelected(address.address, address.location)}>
+                                    <ListItem key={i} bottomDivider onPress={() => this.onAddressSelected(address, address.address, address.location)}>
                                         {address.tag == "home" ? 
                                             <Icon name="home" type="font-awesome"></Icon>
                                         : address.tag == "office" ?
@@ -436,6 +458,17 @@ class Inicio extends React.Component {
                     ListFooterComponent={<Footer cargando={this.state.cargando} animar={this.state.animar}/>}
                 />
                 </View>
+
+                {/* <BottomSheet isVisible={false}>
+                    <View style={{backgroundColor:'white',flex: 1}}>
+                        <Text style={{fontSize:18,alignSelf:'center'}}>Califica a Bella Vita Test</Text>
+
+                        <Rating
+                            onFinishRating={this.ratingCompleted}
+                            style={{ paddingVertical: 10 }}
+                        />
+                    </View>
+                </BottomSheet> */}
 
                 <TabBar {...this.props}/>
             </View>
