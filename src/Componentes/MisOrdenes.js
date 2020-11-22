@@ -62,6 +62,12 @@ class MisOrdenes extends React.Component {
     this.cargarOrdenes();
   }
 
+  checkOrden = (idOrden) => {
+    this.props.navigation.push('OrdenDetalle', {
+      id: idOrden,
+    });
+  };
+
   cargarOrdenes = () => {
     global.ordering
       .orders()
@@ -105,7 +111,10 @@ class MisOrdenes extends React.Component {
         </View>
         <View>
           {this.state.ordenesList.map((orden, i) => (
-            <ListItem key={i} bottomDivider>
+            <ListItem
+              key={i}
+              bottomDivider
+              onPress={() => this.checkOrden(orden.id)}>
               <Avatar source={{uri: orden.business.logo}} />
               <ListItem.Content>
                 <ListItem.Title>{orden.business.name}</ListItem.Title>
