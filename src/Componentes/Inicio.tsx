@@ -34,7 +34,7 @@ class Footer extends React.Component{
         <LottieView  progress={this.state.progress} autoSize style={{width:150}}
         source={require('Animaciones/no_mas.json')}/>
         <Animated.View style={{opacity:this.state.progress}}>
-            <Text style={[styles.title,{color:COLOR_PRIMARY}]}>No hay mas tiendas</Text>
+            <Text style={[styles.title,{color:COLOR_PRIMARY}]}>No hay más tiendas</Text>
         </Animated.View>
     </View>))
     }
@@ -195,56 +195,27 @@ class Inicio extends React.Component {
         if(n.id==0){
             return (
                 <View style={{paddingVertical:12}}>
-                <Text style={[styles.txtTime,{fontSize:14,color:'#F1C40F',margin:12}]}>Favoritas</Text>
-                {/* <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    <View style={{margin:8,justifyContent:'center'}}>
-                        <Avatar rounded size={64} source={{uri:'https://i.pinimg.com/564x/67/d4/46/67d4469a08a973413a20c97905b1ebf1.jpg'}}/>
-                        <ListItem.Title>Tienda 1</ListItem.Title>
-                    </View>
-                    <View style={{margin:8,justifyContent:'center'}}>
-                        <Avatar rounded size={64} source={{uri:'https://i.pinimg.com/564x/67/d4/46/67d4469a08a973413a20c97905b1ebf1.jpg'}}/>
-                        <ListItem.Title>Tienda 1</ListItem.Title>
-                    </View>
-                    <View style={{margin:8,justifyContent:'center'}}>
-                        <Avatar rounded size={64} source={{uri:'https://i.pinimg.com/564x/67/d4/46/67d4469a08a973413a20c97905b1ebf1.jpg'}}/>
-                        <ListItem.Title>Tienda 1</ListItem.Title>
-                    </View>
-                    <View style={{margin:8,justifyContent:'center'}}>
-                        <Avatar rounded size={64} source={{uri:'https://i.pinimg.com/564x/67/d4/46/67d4469a08a973413a20c97905b1ebf1.jpg'}}/>
-                        <ListItem.Title>Tienda 1</ListItem.Title>
-                    </View>
-                    <View style={{margin:8,justifyContent:'center'}}>
-                        <Avatar rounded size={64} source={{uri:'https://i.pinimg.com/564x/67/d4/46/67d4469a08a973413a20c97905b1ebf1.jpg'}}/>
-                        <ListItem.Title>Tienda 1</ListItem.Title>
-                    </View>
-                    <View style={{margin:8,justifyContent:'center'}}>
-                        <Avatar rounded size={64} source={{uri:'https://i.pinimg.com/564x/67/d4/46/67d4469a08a973413a20c97905b1ebf1.jpg'}}/>
-                        <ListItem.Title>Tienda 1</ListItem.Title>
-                    </View>
-                    <View style={{margin:8,justifyContent:'center'}}>
-                        <Avatar rounded size={64} source={{uri:'https://i.pinimg.com/564x/67/d4/46/67d4469a08a973413a20c97905b1ebf1.jpg'}}/>
-                        <ListItem.Title>Tienda 1</ListItem.Title>
-                    </View>
-                    <View style={{margin:8,justifyContent:'center'}}>
-                        <Avatar rounded size={64} source={{uri:'https://i.pinimg.com/564x/67/d4/46/67d4469a08a973413a20c97905b1ebf1.jpg'}}/>
-                        <ListItem.Title>Tienda 1</ListItem.Title>
-                    </View>
-                </ScrollView> */}
+                    <Text style={[styles.txtTime,{fontSize:14,color:'#F1C40F',margin:12}]}>Favoritas</Text>
                 </View>
             )
         }
 
+        let included = false
         if(this.state.tipo!=''){
-            if(this.state.tipo=='comida' && !n.food || this.state.tipo=='comida' && !n.alcohol){
-                return
+            if(this.state.tipo=='comida' && n.food || this.state.tipo=='comida' && n.alcohol){
+                included = true
             }
-            if(this.state.tipo=='farmacia' && !n.groceries){
-                return
+            if(this.state.tipo=='farmacia' && n.groceries){
+                included = true
             }
-            if(this.state.tipo=='farmacia' && !n.food){
-                return
+            if(this.state.tipo=='ropa' && n.laundry){
+                included = true
             }
-            if(this.state.tipo=='farmacia' && !n.farmacy){
+            if(this.state.tipo == 'otro' && !n.food && !n.alcohol && !n.groceries && !n.laundry){
+                included = true
+            }
+
+            if(!included){
                 return
             }
         }
