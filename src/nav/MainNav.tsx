@@ -56,7 +56,7 @@ class MainNavigation extends React.Component {
         navigationRef?.current?.closeDrawer()
     }
     onOpen=()=>{
-        navigationRef?.current?.openDrawer()
+        //navigationRef?.current?.openDrawer()
     }
     componentDidMount(){
     }
@@ -67,17 +67,9 @@ class MainNavigation extends React.Component {
 
     render(){
     return (
-        <ScalingDrawer
-            content={<LeftMenu onClose={this.onClose} onOpen={this.onOpen}/>}
-            {...defaultScalingDrawerConfig}
-        >
+        
             <NavigationContainer ref={navigationRef}>
                 <Navigator
-                    
-                    screenOptions={{
-                        headerShown: false,
-                        gestureEnabled:false
-                    }}
                     initialRouteName='ValidarSesion'
                 >
                     
@@ -100,7 +92,7 @@ class MainNavigation extends React.Component {
                 </Navigator>
               
             </NavigationContainer>
-        </ScalingDrawer>
+
         
     )
     }
