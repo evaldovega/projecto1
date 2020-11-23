@@ -36,6 +36,8 @@ import {
 import {borrarProducto, vaciar} from 'Redux/actions/Pedido';
 import {connect} from 'react-redux';
 import moment from 'moment';
+import 'react-native-get-random-values';
+import {nanoid} from 'nanoid';
 
 const alturaBottom = 54 + getStatusBarHeight();
 class Orden extends React.Component {
@@ -66,42 +68,10 @@ class Orden extends React.Component {
     }
   }
 
-  async openLink() {
+  openPaymentLink(url) {
     try {
-      const url = encodeURI(this.state.urlPagoPaymentMethod);
-      console.log(url);
-      if (await InAppBrowser.isAvailable()) {
-        const result = await InAppBrowser.open(url, {
-          // iOS Properties
-          dismissButtonStyle: 'cancel',
-          preferredBarTintColor: COLOR_PRIMARY,
-          preferredControlTintColor: 'white',
-          readerMode: false,
-          animated: true,
-          modalPresentationStyle: 'fullScreen',
-          modalTransitionStyle: 'coverVertical',
-          modalEnabled: true,
-          enableBarCollapsing: false,
-          // Android Properties
-          showTitle: true,
-          toolbarColor: COLOR_PRIMARY,
-          secondaryToolbarColor: 'black',
-          enableUrlBarHiding: true,
-          enableDefaultShare: true,
-          forceCloseOnRedirection: false,
-          // Specify full animation resource identifier(package:anim/name)
-          // or only resource name(in case of animation bundled with app).
-          animations: {
-            startEnter: 'slide_in_right',
-            startExit: 'slide_out_left',
-            endEnter: 'slide_in_left',
-            endExit: 'slide_out_right',
-          },
-          headers: {
-            'my-custom-header': 'my custom header value',
-          },
-        });
-      } else Linking.openURL(url);
+      const _url = encodeURI(url);
+      Linking.openURL(url);
     } catch (error) {
       Alert.alert(error.message);
     }
@@ -235,41 +205,91 @@ class Orden extends React.Component {
       location: this.state.direccion.location,
       products: productos,
     };
-    let r = await global.ordering
-      .orders()
-      .save(data)
-      .then((r) => {
-        console.log(r.response.data);
-        if (r.response.data.error) {
-          Alert.alert(
-            'No se pudo completar el pedido',
-            r.response.data.result.join('\n'),
-          );
-        } else {
-          if (this.state.metodo_pago.paymethod_id == 33) {
-            console.log(this.state.metodo_pago);
-            orderXMLData = `<data><commerceName>G4 SOFT</commerceName><commerceCode>${this.state.metodo_pago.data.cu_mobile}</commerceCode><ipAddress>127.0.0.1</ipAddress><additionalObservations>Orden generada por sender.com.co</additionalObservations><purchaseData><currencyCode>170</currencyCode><purchaseCode>${r.response.data.result.api.orderId}</purchaseCode><totalAmount>${r.response.data.result.original.total}</totalAmount><terminalCode>${this.state.metodo_pago.data.t_mobile}</terminalCode><iva>${this.props.data.tax}</iva></purchaseData><urlResponse>https://iukax.com/api/Payments/PostPaGp</urlResponse><orderWeb><localReference1/><localReference2/><localReference3/><localReference4/><localReference5/><localReference6/><localReference7/><localReference8/></orderWeb></data>`;
-            console.log(orderXMLData);
 
-            let formAction = this.state.metodo_pago.sandbox
-              ? PAGO_SANDBOX
-              : PAGO_PRODUCTION;
+    // Verificacion de metodo de pago para pasarela PaGo
+    let codigoReferencia = nanoid(10);
+    if (this.state.metodo_pago.paymethod_id == 33) {
+      console.log(this.state.metodo_pago);
 
-            this.setState({
-              urlPagoPaymentMethod:
-                IUKAX_ACTION_URL + formAction + '&valueData=' + orderXMLData,
-            });
+      let totalPagar =
+        parseFloat(this.props.data.delivery_price) +
+        this.props.productos.reduce(
+          (a, p) => a + parseFloat(p.quantity) * p.price,
+          0,
+        ) +
+        this.props.productos.reduce(
+          (a, p) => a + parseFloat(p.quantity) * p.price,
+          0,
+        ) *
+          (parseFloat(this.props.data.service_fee) / 100) +
+        this.props.productos.reduce((a, p) => a + p.quantity * p.price, 0) *
+          (parseFloat(this.props.data.tax) / 100);
 
-            this.props.navigation.push('OrdenDetalle', {
-              id: r.response.data.result.api.orderId,
-            });
+      orderXMLData = `<data><commerceName>G4 SOFT</commerceName><commerceCode>${this.state.metodo_pago.data.cu_mobile}</commerceCode><ipAddress>127.0.0.1</ipAddress><additionalObservations>Orden generada por sender.com.co</additionalObservations><purchaseData><currencyCode>170</currencyCode><purchaseCode>${codigoReferencia}</purchaseCode><totalAmount>${totalPagar}</totalAmount><terminalCode>${this.state.metodo_pago.data.t_mobile}</terminalCode><iva>${this.props.data.tax}</iva></purchaseData><urlResponse>https://iukax.com/api/Payments/PostPaGp</urlResponse><orderWeb><localReference1/><localReference2/><localReference3/><localReference4/><localReference5/><localReference6/><localReference7/><localReference8/></orderWeb></data>`;
 
-            this.openLink();
+      let formAction = this.state.metodo_pago.sandbox
+        ? PAGO_SANDBOX
+        : PAGO_PRODUCTION;
+
+      let urlPayment =
+        IUKAX_ACTION_URL + formAction + '&valueData=' + orderXMLData;
+      this.openPaymentLink(urlPayment);
+      this.comprobarPago(codigoReferencia, data);
+    } else {
+      let r = await global.ordering
+        .orders()
+        .save(data)
+        .then((r) => {
+          console.log(r.response.data);
+          if (r.response.data.error) {
+            Alert.alert(
+              'No se pudo completar el pedido',
+              r.response.data.result.join('\n'),
+            );
           } else {
             this.props.navigation.push('OrdenDetalle', {
               id: r.response.data.result.api.orderId,
             });
           }
+        });
+    }
+  };
+
+  comprobarPago = (numeroReferencia, data) => {
+    fetch(
+      'https://iukax.com/api/Payments/GetByPurchaseCode/' + numeroReferencia,
+    )
+      .then((r) => {
+        if (r.status == 204) {
+          setTimeout(function () {
+            comprobarPago(numeroReferencia, data);
+          }, 5000);
+        }
+        return r;
+      })
+      .then((r) => r.json())
+      .then((r) => {
+        if (
+          ['00', '08', '11', '76', '77', '78', '79', '80', '81'].includes(
+            r.codRespuesta,
+          )
+        ) {
+          let r = global.ordering
+            .orders()
+            .save(data)
+            .then((r) => {
+              console.log(r.response.data);
+              if (r.response.data.error) {
+                Alert.alert(
+                  'No se pudo completar el pedido',
+                  r.response.data.result.join('\n'),
+                );
+              } else {
+                this.props.navigation.push('OrdenDetalle', {
+                  id: r.response.data.result.api.orderId,
+                });
+              }
+            });
         }
       });
   };
