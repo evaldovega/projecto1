@@ -2,7 +2,7 @@ export const API_PROJECT_NAME = 'mydomi';
 export const ONESIGNAL_ID = '8bef89be-e49e-43c7-b17c-630aa86435df';
 
 export const COLOR_BG = '#F7F8F9';
-export const COLOR_PRIMARY = '#733189';
+export const COLOR_PRIMARY = '#490094';
 export const COLOR_ACCENT = '#EA8915';
 export const COLOR_TEXT = '#959396';
 export const COLOR_BG_TAPBAR = '#e5e5e5';
