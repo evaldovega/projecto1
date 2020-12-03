@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Claka</string>
+	<string>Sender</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -37,9 +37,9 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Sender requiere utilizar la ubicación geográfica</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Sender requiere utilizar la ubicación geográfica</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Sender requiere utilizar la ubicación geográfica</string>
 	<key>UIAppFonts</key>
 	<array>
@@ -87,6 +87,10 @@
 		<string>Octicons.ttf</string>
 		<string>SimpleLineIcons.ttf</string>
 		<string>Zocial.ttf</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
