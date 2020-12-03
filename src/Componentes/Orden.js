@@ -234,7 +234,15 @@ class Orden extends React.Component {
         this.props.productos.reduce((a, p) => a + p.quantity * p.price, 0) *
           (parseFloat(this.props.data.tax) / 100);
 
-      orderXMLData = `<data><commerceName>G4 SOFT</commerceName><commerceCode>${this.state.metodo_pago.data.cu_mobile}</commerceCode><ipAddress>127.0.0.1</ipAddress><additionalObservations>Orden generada por sender.com.co</additionalObservations><purchaseData><currencyCode>170</currencyCode><purchaseCode>${codigoReferencia}</purchaseCode><totalAmount>${totalPagar}</totalAmount><terminalCode>${this.state.metodo_pago.data.t_mobile}</terminalCode><iva>${this.props.data.tax}</iva></purchaseData><urlResponse>https://iukax.com/api/Payments/PostPaGp</urlResponse><orderWeb><localReference1/><localReference2/><localReference3/><localReference4/><localReference5/><localReference6/><localReference7/><localReference8/></orderWeb></data>`;
+      orderXMLData = `<data><commerceName>G4 SOFT</commerceName><commerceCode>${
+        this.state.metodo_pago.data.cu_mobile
+      }</commerceCode><ipAddress>127.0.0.1</ipAddress><additionalObservations>Orden generada por sender.com.co</additionalObservations><purchaseData><currencyCode>170</currencyCode><purchaseCode>${codigoReferencia}</purchaseCode><totalAmount>${this.setDecimalsValues(
+        totalPagar.toFixed(2),
+      )}</totalAmount><terminalCode>${
+        this.state.metodo_pago.data.t_mobile
+      }</terminalCode><iva>${this.setDecimalsValues(
+        this.props.data.tax.toFixed(2),
+      )}</iva></purchaseData><urlResponse>https://iukax.com/api/Payments/PostPaGp</urlResponse><orderWeb><localReference1/><localReference2/><localReference3/><localReference4/><localReference5/><localReference6/><localReference7/><localReference8/></orderWeb></data>`;
 
       let formAction = this.state.metodo_pago.sandbox
         ? PAGO_SANDBOX
@@ -262,6 +270,16 @@ class Orden extends React.Component {
           }
         });
     }
+  };
+
+  setDecimalsValues = (value) => {
+    var strValue = value + '';
+    if (!strValue.includes('.')) {
+      strValue = strValue + '00';
+    } else {
+      strValue = strValue.replace('.', '');
+    }
+    return strValue;
   };
 
   comprobarPago = (numeroReferencia, data) => {
