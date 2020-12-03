@@ -69,7 +69,7 @@ class Producto extends React.Component {
         name: producto.name,
         price: producto.price,
         images: producto.images,
-        quantity: 0,
+        quantity: 1,
         options: [],
         ingredients: [],
       };

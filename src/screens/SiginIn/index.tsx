@@ -1,5 +1,5 @@
 import React, {memo, useCallback,useState } from 'react';
-import {View, StyleSheet, TouchableOpacity, Text, Alert, Image, ImageBackground} from "react-native";
+import {View, StyleSheet, TouchableOpacity, Text, Alert, Image, ImageBackground, ScrollView} from "react-native";
 import {useNavigation, CurrentRenderContext} from "@react-navigation/native";
 import Header from "screens/SiginIn/components/Header";
 import Input from "screens/SiginIn/components/Input";
@@ -34,6 +34,8 @@ class SignIn extends React.Component {
             }else{
                 const {id,name,lastname,birthdate,email,phone,photo,data_map,session}=r.response.data.result
                 
+                global.ordering.setAccessToken(session.access_token) // Asignacion de token de inicio a SDK ordering
+                // Se almacena token de inicio y data de user para algunas consultas
                 await AsyncStorage.setItem('token',session.access_token)
                 await AsyncStorage.setItem('user',JSON.stringify({id,name,lastname,birthdate,email,phone,photo,data_map}))
                 this.props.navigation.navigate('Inicio');
@@ -50,42 +52,42 @@ class SignIn extends React.Component {
 
     render(){
         return (
-            <View style={styles.container}>
-            <ImageBackground
-            source={require('imagenes/bgfondo.png')}
-            style={styles.bgimage}>
-                <Image source={require('imagenes/logo-negro.png')} style={{alignSelf:'center',marginTop:-20,marginBottom:0,width:250,resizeMode:'contain'}}></Image>
-                <LottieView autoPlay loop={false} autoSize style={{width:'100%',top:0,position:"absolute",left:0}} source={require('Animaciones/confetti.json')}/>
-                <Input mt={10} placeholder={'Email'} value={this.state.email} onChangeText={(e)=>this.setState({email: e})} />
-                <Input mt={16} pass={true} placeholder={'Contraseña'} value={this.state.password} onChangeText={(t)=>this.setState({password: t})}/>
-                <View style={styles.containerSignIn}>
-                    <TouchableOpacity style={styles.btnSignIn} onPress={() => this.onPressSignIn()}>
-                        <Text style={styles.txtSignIn}>ACCEDER</Text>
-                    </TouchableOpacity>
-                </View>
-                <TouchableOpacity style={styles.btnForgot} onPress={() => this.onPressForgot()}>
-                    <Text style={styles.txtForgot}>¿Olvidaste tu contraseña?</Text>
-                </TouchableOpacity>
+            // <ImageBackground
+            //     source={require('imagenes/bgfondo.png')}
+            //     style={styles.bgimage}>
+                    <View style={styles.container}>
+                        <ScrollView contentContainerStyle={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                            <Image source={require('imagenes/logo.png')} style={{marginTop: 20, alignSelf:'center',height:200, width:150,resizeMode:'contain'}}></Image>
+                            <LottieView autoPlay loop={false} autoSize style={{width:'100%',top:0,position:"absolute",left:0}} source={require('Animaciones/confetti.json')}/>
+                            <Input mt={10} placeholder={'Email'} value={this.state.email} onChangeText={(e)=>this.setState({email: e})} />
+                            <Input mt={16} pass={true} placeholder={'Contraseña'} value={this.state.password} onChangeText={(t)=>this.setState({password: t})}/>
+                            <View style={styles.containerSignIn}>
+                                <TouchableOpacity style={styles.btnSignIn} onPress={() => this.onPressSignIn()}>
+                                    <Text style={styles.txtSignIn}>ACCEDER</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <TouchableOpacity style={styles.btnForgot} onPress={() => this.onPressForgot()}>
+                                <Text style={styles.txtForgot}>¿Olvidaste tu contraseña?</Text>
+                            </TouchableOpacity>
 
-                <View style={styles.containerOr}>
-                    <View style={styles.line}/>
-                    <Text style={styles.txtOr}>O</Text>
-                    <View style={styles.line}/>
-                </View>
+                            <View style={styles.containerOr}>
+                                <View style={styles.line}/>
+                                <Text style={styles.txtOr}>O</Text>
+                                <View style={styles.line}/>
+                            </View>
 
-                <TouchableOpacity style={styles.btnSignFb} onPress={() => navigate('Registro')}>
-                    <Text style={styles.txtSignInFb}>Regístrate ahora</Text>
-                </TouchableOpacity>
+                            <TouchableOpacity style={styles.btnSignFb} onPress={() => this.props.navigation.navigate('Registro')}>
+                                <Text style={styles.txtSignInFb}>Regístrate ahora</Text>
+                            </TouchableOpacity>
 
-                { /*
-                <TouchableOpacity style={styles.btnSignInGoogle}>
-                    <Text style={styles.txtSignInFb}>Sign In With Google</Text>
-                </TouchableOpacity>
-                */ }
-
-                
-                </ImageBackground>
-            </View>
+                            { /*
+                            <TouchableOpacity style={styles.btnSignInGoogle}>
+                                <Text style={styles.txtSignInFb}>Sign In With Google</Text>
+                            </TouchableOpacity>
+                            */ }
+                        </ScrollView>
+                    </View>
+            // </ImageBackground>
         )
     }
 }
@@ -94,8 +96,10 @@ export default SignIn;
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        backgroundColor: '#FFF'
+        flex: 2,
+        backgroundColor: '#FFF',
+        alignContent: 'center',
+        justifyContent: 'center',
     },
     containerSignIn: {
         flexDirection: 'row',
@@ -165,7 +169,8 @@ const styles = StyleSheet.create({
         backgroundColor: COLOR_PRIMARY,
         marginTop: 16,
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        paddingHorizontal: 20
     },
     txtSignInFb: {
         fontWeight: '600',

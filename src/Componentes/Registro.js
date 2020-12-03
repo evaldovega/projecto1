@@ -30,7 +30,7 @@ import SvgOption from 'svgs/staticsHealth/SvgOptions';
 import SvgSetting from 'svgs/staticsHealth/SvgSetting';
 import LottieView from 'lottie-react-native';
 import {connect} from 'react-redux';
-import {navigate} from 'utils/navigation';
+import {navigate, ROUTERS} from 'utils/navigation';
 import {Icon} from 'react-native-elements';
 
 const {width, heigth} = Dimensions.get('screen');
@@ -49,58 +49,40 @@ class Registro extends React.Component {
       email: this.state.correoElectronico,
       password: this.state.password,
     };
-    this.setState({userRegistered: true});
 
-    // global.ordering
-    //   .users()
-    //   .save(data)
-    //   .then(async (r) => {
-    //     console.log(r);
-    //     if (r.response.data.error) {
-    //       console.log(r.response.data)
-    //       Alert.alert(
-    //         'Ha ocurrido un error',
-    //         r.response.data.result.join('\n'),
-    //       );
-    //     } else {
-    //       const {
-    //         id,
-    //         name,
-    //         lastname,
-    //         birthdate,
-    //         email,
-    //         phone,
-    //         photo,
-    //         data_map,
-    //         session,
-    //       } = r.response.data.result;
-
-    //       // global.ordering.users().auth(
-    //       //     {
-    //       //         email: email,
-    //       //         password: password
-    //       //     }
-    //       // ).then(async (r)=>{
-    //       //     console.log(r)
-    //       //     if(r.response.data.error){
-    //       //         Alert.alert('Ha ocurrido un error',r.response.data.result.join("\n"))
-    //       //     }else{
-    //       //         const {id,name,lastname,birthdate,email,phone,photo,data_map,session}=r.response.data.result
-
-    //       //         await AsyncStorage.setItem('token',session.access_token)
-    //       //         await AsyncStorage.setItem('user',JSON.stringify({id,name,lastname,birthdate,email,phone,photo,data_map}))
-    //       //         navigate('Inicio');
-    //       //     }
-    //       // }).catch(error=>{
-    //       //     console.log("ERROR")
-    //       //     console.log(error)
-    //       // })
-    //     }
-    //   })
-    //   .catch((error) => {
-    //     console.log('ERROR');
-    //     console.log(error);
-    //   });
+    global.ordering
+      .users()
+      .save(data)
+      .then(async (r) => {
+        console.log(r);
+        if (r.response.data.error) {
+          console.log(r.response.data);
+          Alert.alert(
+            'Ha ocurrido un error',
+            r.response.data.result.join('\n'),
+          );
+        } else {
+          const {
+            id,
+            name,
+            lastname,
+            birthdate,
+            email,
+            phone,
+            photo,
+            data_map,
+            session,
+          } = r.response.data.result;
+          this.setState({userRegistered: true});
+          setTimeout(function () {
+            this.props.navigation.navigate(ROUTERS.SignIn);
+          }, 3000);
+        }
+      })
+      .catch((error) => {
+        console.log('ERROR');
+        console.log(error);
+      });
   };
 
   render() {
@@ -135,44 +117,38 @@ class Registro extends React.Component {
           </View>
         </Modal>
 
-        <ImageBackground
-          source={require('imagenes/bgfondo.png')}
-          style={styles.bgimage}>
-          <StatusBar
-            translucent={true}
-            backgroundColor={'transparent'}
-            barStyle={'light-content'}
-          />
-          <View style={[styles.header, {position: 'relative'}]}>
-            <View
-              style={{
-                backgroundColor: COLOR_PRIMARY,
-                position: 'absolute',
-                width: '100%',
-                height: 96,
-              }}></View>
-            <Text style={styles.title}>Registro</Text>
-            <TouchableOpacity
-              style={styles.btnClose}
-              onPress={() => this.props.navigation.pop()}>
-              <Icon
-                name="chevron-back"
-                type="ionicon"
-                color="#ffff"
-                size={24}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.btnOption}></TouchableOpacity>
-          </View>
-
-          <View>
+        <View style={[styles.header, {position: 'relative'}]}>
+          <View
+            style={{
+              backgroundColor: COLOR_PRIMARY,
+              position: 'absolute',
+              width: '100%',
+              height: 96,
+            }}></View>
+          <Text style={styles.title}>Registro</Text>
+          <TouchableOpacity
+            style={styles.btnClose}
+            onPress={() => this.props.navigation.pop()}>
+            <Icon name="chevron-back" type="ionicon" color="#ffff" size={24} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.btnOption}></TouchableOpacity>
+        </View>
+        <ScrollView
+          contentContainerStyle={{
+            flex: 1,
+            alignContent: 'center',
+            justifyContent: 'center',
+          }}>
+          <View
+            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
             <Image
-              source={require('imagenes/logo-negro.png')}
+              source={require('imagenes/logo.png')}
               style={{
                 alignSelf: 'center',
-                marginTop: 0,
+                marginTop: '20%',
                 marginBottom: 0,
-                width: 250,
+                height: 200,
+                width: 150,
                 resizeMode: 'contain',
               }}></Image>
             <LottieView
@@ -217,7 +193,7 @@ class Registro extends React.Component {
               <Text style={{color: 'white'}}>Registrarme</Text>
             </TouchableOpacity>
           </View>
-        </ImageBackground>
+        </ScrollView>
       </View>
     );
   }
@@ -229,6 +205,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F7F8F9',
+    justifyContent: 'center',
+    alignContent: 'center',
   },
   header: {
     backgroundColor: COLOR_PRIMARY,

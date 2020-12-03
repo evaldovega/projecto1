@@ -94,8 +94,11 @@ class Inicio extends React.Component {
     }
 
     componentDidMount(){
-        this.cargarUserAddresses()
-        this.buscarOrdenesSinCalificar()
+        let _this = this
+        setTimeout(function(){
+            _this.cargarUserAddresses()
+            _this.buscarOrdenesSinCalificar()
+        }, 500)
         OneSignal.addEventListener('received', this.notificacionRecivida);
         OneSignal.addEventListener('opened', this.notificacionAbierta);
         // this.props.navigation.push('OrdenDetalle',{id:576})
@@ -141,13 +144,13 @@ class Inicio extends React.Component {
         AsyncStorage.getItem("user").then((user)=>{
             let userId = JSON.parse(user).id
             this.setState({userId: userId})
+            
             global.ordering.users(userId).addresses().get().then(async(r) => {
                 if(r.response.data.result.length == 0){
                     Alert.alert("Debes tener al menos una dirección registrada", "");
                     this.props.navigation.navigate('AgregarUbicacion')
                 }
                 this.setState({addressResultsList: r.response.data.result})
-                
                 if(r.response.data.result.length > 0){
                     var addressSelected = false
                     global.userAddresses = []
@@ -211,7 +214,7 @@ class Inicio extends React.Component {
             if(this.state.tipo=='ropa' && n.laundry){
                 included = true
             }
-            if(this.state.tipo == 'otro' && !n.food && !n.alcohol && !n.groceries && !n.laundry){
+            if(this.state.tipo == 'otro'){
                 included = true
             }
 

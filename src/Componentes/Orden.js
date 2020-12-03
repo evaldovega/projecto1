@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Alert,
   Linking,
+  Dimensions,
   Modal,
 } from 'react-native';
 import {InAppBrowser} from 'react-native-inappbrowser-reborn';
@@ -37,9 +38,11 @@ import {borrarProducto, vaciar} from 'Redux/actions/Pedido';
 import {connect} from 'react-redux';
 import moment from 'moment';
 import 'react-native-get-random-values';
+import LottieView from 'lottie-react-native';
 import {nanoid} from 'nanoid';
 
 const alturaBottom = 54 + getStatusBarHeight();
+const {width, heigth} = Dimensions.get('screen');
 class Orden extends React.Component {
   state = {
     orden: {},
@@ -49,6 +52,7 @@ class Orden extends React.Component {
     mostrar_direcciones: false,
     mostrar_metodos_pago: false,
     urlPagoPaymentMethod: '',
+    isCheckingPayment: false,
   };
 
   componentDidMount() {
@@ -197,6 +201,11 @@ class Orden extends React.Component {
         options: p.options,
       };
     });
+
+    if (this.state.metodo_pago == null || this.state.metodo_pago == undefined) {
+      Alert.alert('Espera un momento', 'Debes seleccionar un método de pago');
+    }
+
     let data = {
       customer_id: this.props.id,
       paymethod_id: this.state.metodo_pago.paymethod_id,
@@ -256,19 +265,23 @@ class Orden extends React.Component {
   };
 
   comprobarPago = (numeroReferencia, data) => {
+    console.log('Comprobando pago: ', numeroReferencia);
+    const _this = this;
+    this.setState({isCheckingPayment: true});
     fetch(
       'https://iukax.com/api/Payments/GetByPurchaseCode/' + numeroReferencia,
     )
       .then((r) => {
         if (r.status == 204) {
           setTimeout(function () {
-            comprobarPago(numeroReferencia, data);
+            _this.comprobarPago(numeroReferencia, data);
           }, 5000);
         }
         return r;
       })
       .then((r) => r.json())
       .then((r) => {
+        this.setState({isCheckingPayment: false});
         if (
           ['00', '08', '11', '76', '77', '78', '79', '80', '81'].includes(
             r.codRespuesta,
@@ -320,6 +333,27 @@ class Orden extends React.Component {
           />
         </View>
 
+        <Modal
+          transparent={true}
+          animationType={'fade'}
+          visible={this.state.isCheckingPayment}>
+          <View style={styles.modalBackground}>
+            <View style={styles.cardOverlay}>
+              <LottieView
+                autoPlay
+                loop={false}
+                autoSize
+                style={{width: '100%', alignSelf: 'center'}}
+                source={require('Animaciones/waiting_payment.json')}
+              />
+              <Text
+                style={{fontWeight: '400', fontSize: 18, alignSelf: 'center'}}>
+                Esperando pago
+              </Text>
+            </View>
+          </View>
+        </Modal>
+
         <ScrollView style={{flex: 1}}>
           <Text
             style={{
@@ -349,6 +383,7 @@ class Orden extends React.Component {
                 )}
                 displayType={'text'}
                 thousandSeparator={true}
+                decimalScale={2}
                 prefix={'$'}
                 renderText={(v) => (
                   <Text
@@ -374,6 +409,7 @@ class Orden extends React.Component {
                 value={this.props.data.delivery_price}
                 displayType={'text'}
                 thousandSeparator={true}
+                decimalScale={2}
                 prefix={'$'}
                 renderText={(v) => (
                   <Text
@@ -406,6 +442,7 @@ class Orden extends React.Component {
                 }
                 displayType={'text'}
                 thousandSeparator={true}
+                decimalScale={1}
                 prefix={'$'}
                 renderText={(v) => (
                   <Text
@@ -437,6 +474,7 @@ class Orden extends React.Component {
                   (this.props.data.tax / 100)
                 }
                 displayType={'text'}
+                decimalScale={1}
                 thousandSeparator={true}
                 prefix={'$'}
                 renderText={(v) => (
@@ -697,5 +735,37 @@ const styles = StyleSheet.create({
     fontFamily: Montserrat,
     fontSize: 17,
     color: '#fff',
+  },
+  containerModal: {
+    marginHorizontal: 40,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#EAE8EA',
+    height: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  modalBackground: {
+    backgroundColor: '#FFFFFFDE',
+    justifyContent: 'center',
+    alignContent: 'center',
+    flex: 1,
+  },
+  cardOverlay: {
+    backgroundColor: 'white',
+    padding: 24,
+    borderRadius: 12,
+    width: width - 40,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+
+    elevation: 5,
   },
 });
