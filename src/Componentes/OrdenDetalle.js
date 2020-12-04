@@ -332,15 +332,61 @@ class OrdenDetalle extends React.Component {
             color: COLOR_DESATIVADO,
             textAlign: 'center',
             marginVertical: 8,
+            marginTop: 24,
           }}>
           {this.state.orden.business.name}
         </Text>
+        <Text
+          style={{
+            textAlign: 'center',
+            color: COLOR_PRIMARY,
+            fontWeight: 'bold',
+          }}>
+          (Teléfono {this.state.orden.business.phone} / Teléfono móvil{' '}
+          {this.state.orden.business.cellphone})
+        </Text>
+        <Text
+          numberOfLines={1}
+          style={{
+            textAlign: 'left',
+            marginTop: 10,
+            paddingHorizontal: 16,
+          }}>
+          Dirección de negocios: {this.state.orden.business.address}
+        </Text>
+        <Text
+          numberOfLines={1}
+          style={{
+            textAlign: 'left',
+            paddingHorizontal: 16,
+          }}>
+          Método de pago: {this.state.orden.paymethod.name}
+        </Text>
+        <Text
+          numberOfLines={1}
+          style={{
+            textAlign: 'left',
+            paddingHorizontal: 16,
+          }}>
+          Tipo de entrega:{' '}
+          {this.state.orden.delivery_type == 1 ? 'Entrega' : 'Recogida'}
+        </Text>
+        <Text
+          numberOfLines={1}
+          style={{
+            textAlign: 'left',
+            paddingHorizontal: 16,
+          }}>
+          Fecha de entrega: {this.state.orden.delivery_datetime}
+        </Text>
+
         <Text
           style={{
             fontSize: 18,
             color: COLOR_PRIMARY,
             textAlign: 'center',
             marginVertical: 8,
+            marginTop: 20,
           }}>
           {ESTADO[this.state.orden.status]}
         </Text>
@@ -352,30 +398,125 @@ class OrdenDetalle extends React.Component {
     if (!this.state.orden) {
       return;
     }
+    console.log(this.state.orden);
     return (
-      <View
-        style={{
-          marginTop: 16,
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-        }}>
-        <Text style={{fontSize: 24, color: COLOR_TEXT}}>Total parcial</Text>
-        <CurrencyFormat
-          value={this.state.total}
-          displayType={'text'}
-          thousandSeparator={true}
-          prefix={'$'}
-          renderText={(v) => (
-            <Text
-              style={{
-                fontSize: 24,
-                color: COLOR_PRIMARY,
-                textAlign: 'right',
-              }}>
-              {v}
-            </Text>
-          )}
-        />
+      <View style={{flexDirection: 'column'}}>
+        <View
+          style={{
+            marginTop: 16,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+          }}>
+          <Text style={{fontSize: 18, color: COLOR_TEXT}}>Total parcial</Text>
+          <CurrencyFormat
+            value={this.state.total}
+            displayType={'text'}
+            thousandSeparator={true}
+            decimalScale={2}
+            prefix={'$'}
+            renderText={(v) => (
+              <Text
+                style={{
+                  fontSize: 18,
+                  color: COLOR_PRIMARY,
+                  textAlign: 'right',
+                }}>
+                {v}
+              </Text>
+            )}
+          />
+        </View>
+        <View
+          style={{
+            marginTop: 16,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+          }}>
+          <Text style={{fontSize: 18, color: COLOR_TEXT}}>
+            Impuestos({this.state.orden.tax}%)
+          </Text>
+          <CurrencyFormat
+            value={
+              this.state.orden.products.reduce(
+                (a, p) => a + p.quantity * p.price,
+                0,
+              ) *
+              (this.state.orden.tax / 100)
+            }
+            displayType={'text'}
+            thousandSeparator={true}
+            decimalScale={2}
+            prefix={'$'}
+            renderText={(v) => (
+              <Text
+                style={{
+                  fontSize: 18,
+                  color: COLOR_PRIMARY,
+                  textAlign: 'right',
+                }}>
+                {v}
+              </Text>
+            )}
+          />
+        </View>
+        <View
+          style={{
+            marginTop: 16,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+          }}>
+          <Text style={{fontSize: 18, color: COLOR_TEXT}}>Gastos de envío</Text>
+          <CurrencyFormat
+            value={this.state.orden.delivery_zone_price}
+            displayType={'text'}
+            thousandSeparator={true}
+            decimalScale={2}
+            prefix={'$'}
+            renderText={(v) => (
+              <Text
+                style={{
+                  fontSize: 18,
+                  color: COLOR_PRIMARY,
+                  textAlign: 'right',
+                }}>
+                {v}
+              </Text>
+            )}
+          />
+        </View>
+        <View
+          style={{
+            marginTop: 16,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+          }}>
+          <Text style={{fontSize: 18, color: COLOR_TEXT}}>
+            Gastos del servicio ({this.state.orden.service_fee}%)
+          </Text>
+          <CurrencyFormat
+            value={
+              this.state.orden.products.reduce(
+                (a, p) => a + p.quantity * p.price,
+                0,
+              ) *
+              (this.state.orden.service_fee / 100)
+            }
+            displayType={'text'}
+            thousandSeparator={true}
+            decimalScale={2}
+            prefix={'$'}
+            renderText={(v) => (
+              <Text
+                style={{
+                  fontSize: 18,
+                  color: COLOR_PRIMARY,
+                  textAlign: 'right',
+                }}>
+                {v}
+              </Text>
+            )}
+          />
+        </View>
       </View>
     );
   };
